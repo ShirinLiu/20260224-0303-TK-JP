@@ -11,7 +11,8 @@ export default function App() {
   const [view, setView] = useState<'itinerary' | 'tools' | 'settings'>('itinerary');
   const [itinerary, setItinerary] = useState<DailyPlan[]>(() => {
     try {
-      const saved = localStorage.getItem('zen_travel_itinerary_v1');
+      // Updated to v2 to force load new initial data (Seongsu itinerary)
+      const saved = localStorage.getItem('zen_travel_itinerary_v2');
       return saved ? JSON.parse(saved) : INITIAL_ITINERARY;
     } catch (e) {
       console.error("Failed to load itinerary from storage", e);
@@ -29,7 +30,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('zen_travel_itinerary_v1', JSON.stringify(itinerary));
+      localStorage.setItem('zen_travel_itinerary_v2', JSON.stringify(itinerary));
     } catch (e) {
       console.error("Storage quota exceeded", e);
       alert("儲存空間已滿，部分圖片可能無法保存。請嘗試刪除一些舊圖片。");
@@ -38,7 +39,7 @@ export default function App() {
 
   const handleResetData = () => {
     if (window.confirm("確定要重置所有行程資料嗎？您的所有修改和上傳的照片將會消失。")) {
-      localStorage.removeItem('zen_travel_itinerary_v1');
+      localStorage.removeItem('zen_travel_itinerary_v2');
       setItinerary(INITIAL_ITINERARY);
       alert("資料已重置為預設值。");
     }
@@ -74,6 +75,7 @@ export default function App() {
 
   const getDayLocation = (day: DailyPlan) => {
     const text = JSON.stringify(day.items);
+    if (text.includes('聖水') || text.includes('Seongsu')) return 'Seoul / Seongsu';
     if (text.includes('首爾') || text.includes('仁川') || text.includes('ICN')) return 'Seoul / Incheon';
     if (text.includes('越後湯澤') || text.includes('滑雪')) return 'Niigata (Snow)';
     if (text.includes('高崎') || text.includes('Gunma')) return 'Gunma';
@@ -320,7 +322,7 @@ export default function App() {
                 <Trash2 size={16} /> 重置所有資料
               </button>
             </div>
-            <div className="text-center text-xs text-stone-400">20260224-0303 JP & KR v1.1.0 &bull; Japan & Korea Edition</div>
+            <div className="text-center text-xs text-stone-400">20260224-0303 JP & KR v1.2.0 &bull; Japan & Korea Edition</div>
           </div>
         )}
       </main>
