@@ -70,7 +70,7 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
     : (i.endLocation || i.startLocation || '');
 
   const isKoreaLocation = (loc: string) => {
-    const koreaKeywords = ['Seoul', 'Incheon', '首爾', '仁川', 'Wecostay', 'Ggupdang', 'Egg Clinic', '忠武路', 'Myeongdong', 'Korea', 'Dongdaemun', '東大門', '金豬', 'Geumdaeji', 'Sindang', '新堂'];
+    const koreaKeywords = ['Seoul', 'Incheon', '首爾', '仁川', 'Wecostay', 'Ggupdang', 'Egg Clinic', '忠武路', 'Myeongdong', 'Korea', 'Dongdaemun', '東大門', '金豬', 'Geumdaeji', 'Sindang', '新堂', 'Dosan', '島山', 'Bagel'];
     return koreaKeywords.some(k => loc.toLowerCase().includes(k.toLowerCase())) || /[\u3131-\uD79D]/.test(loc);
   };
 
@@ -282,7 +282,17 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
                         <Navigation size={18} />
                         {shouldUseNaver(item) ? '開始導航 (Naver Map)' : '開始導航 (Google Maps)'}
                     </button>
-                    <div className="text-[10px] text-stone-400 text-center -mt-2">
+                    {/* Reference Link Button (CatchTable etc) */}
+                    {item.referenceLink && (
+                        <button 
+                            onClick={() => window.open(item.referenceLink!.url, '_blank')}
+                            className="w-full py-3 mt-3 bg-white border border-stone-200 text-stone-700 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-50 active:scale-95 transition-transform"
+                        >
+                            <ExternalLink size={18} />
+                            {item.referenceLink.label}
+                        </button>
+                    )}
+                    <div className="text-[10px] text-stone-400 text-center mt-2">
                         導航目的地: {getNavTarget(item)}
                     </div>
                 </>

@@ -975,7 +975,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
             endLocation: "Wecostay Namsan",
             startTime: "17:00",
             endTime: "17:30",
-            navLink: "https://naver.me/G1FO7W5S",
+            navLink: "https://naver.me/G2EwQEal",
             notes: "抵達飯店辦理入住或寄放行李。\n地址: 서울 중구 충무로 3 111호 (WeCostay Namsan)。",
             tags: [{ label: "PIN: 9466", type: "reservation" }],
             walkingRoute: "地鐵忠武路站「6號出口」步行約 3 分鐘",
@@ -1034,7 +1034,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
             startLocation: "Geumdaeji Shikdang",
             endLocation: "Wecostay Namsan",
             startTime: "22:00",
-            navLink: "https://naver.me/G1FO7W5S",
+            navLink: "https://naver.me/G2EwQEal",
             notes: "返回 Wecostay 休息。",
             walkingRoute: "計程車約 5-10 分鐘，或地鐵藥水站 -> 忠武路站"
           }
@@ -1055,24 +1055,12 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
       {
         id: id(),
         date: "3/2 (一)",
-        type: EventType.ACTIVITY,
-        title: "首爾市區自由行 (一隻雞)",
-        startLocation: "首爾市區",
-        notes: "全天自由行",
-        tags: [{ label: "一隻雞", type: "food" }],
-        guideRecommendation: {
-          mustOrder: "1. 一隻雞 (닭한마리)\n2. 刀削麵 (칼국수)\n3. 營養粥 (죽)",
-          tips: "推薦『陳玉華』或『孔陵』。先喝清湯，再加蒜泥與泡菜煮。最後的精華雞湯一定要加點刀削麵或海苔煮成粥！"
-        }
-      },
-      {
-        id: id(),
-        date: "3/2 (一)",
         type: EventType.STAY,
         title: "返回飯店",
         startLocation: "首爾市區",
         endLocation: "Wecostay Namsan",
         notes: "續住 Wecostay 南山住宿",
+        navLink: "https://naver.me/G2EwQEal",
         walkingRoute: "地鐵忠武路站「5/6號出口」 (步行1-2分)"
       }
     ]
@@ -1130,20 +1118,44 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         id: id(),
         date: "3/3 (二)",
         type: EventType.SHOPPING,
-        title: "市區採買/前往機場",
-        startLocation: "Sinsa/Gangnam",
-        endLocation: "Myeongdong -> Incheon",
+        title: "London Bagel Museum Dosan",
+        startLocation: "Ggupdang",
+        endLocation: "London Bagel Museum Dosan",
         startTime: "17:00",
-        notes: "最後採買與領取行李"
+        endTime: "18:00",
+        navLink: "https://naver.me/5Nek3Xh2",
+        referenceLink: {
+          url: "https://www.catchtable.net/zh-TW/explore/shop/london_bagel_museum_dosan",
+          label: "CatchTable 候位/訂位"
+        },
+        notes: "首爾最紅的貝果名店。就在島山公園附近。若無法內用，建議外帶去機場吃。\n地址: 首爾特別市 江南區 新沙洞 642-25",
+        tags: [{ label: "必買貝果", type: "food" }, { label: "排隊名店", type: "alert" }],
+        guideRecommendation: {
+          mustOrder: "1. Potato Cheese Bagel (馬鈴薯起司)\n2. Spring Onion Pretzel (蔥韭菜貝果)\n3. Brick Lane (蜂蜜奶油)",
+          tips: "建議一開放遠端候位就先登記 (CatchTable)。馬鈴薯起司是絕對招牌，口感像麻糬一樣Q彈。店內裝潢非常有英倫風，很適合拍照。"
+        },
+        walkingRoute: "從 Ggupdang 步行約 10-15 分鐘"
       },
       {
         id: id(),
         date: "3/3 (二)",
         type: EventType.TRANSFER,
-        title: "前往仁川機場",
-        startLocation: "忠武路站",
+        title: "前往仁川機場 (機場巴士 6009)",
+        startLocation: "Egg Clinic (行李領取)",
         endLocation: "仁川機場 (ICN)",
-        notes: "準備搭機"
+        startTime: "18:15",
+        endTime: "20:00",
+        navLink: "https://naver.me/FpMPzF7v",
+        notes: "回診所領取行李，步行至新沙站搭乘機場巴士 6009。\n目標: 20:30 前抵達機場櫃檯。",
+        tags: [{ label: "20:30前抵達", type: "alert" }, { label: "巴士6009", type: "info" }],
+        detailedWalkingGuide: {
+          steps: [
+            "回到 Egg Clinic 領取寄放的行李。",
+            "步行至「新沙站 (Sinsa Stn.)」機場巴士站 (位於 6 號出口附近，中央車道或路邊請確認標示)。",
+            "搭乘機場巴士【6009】往仁川機場 (費用約 17,000 KRW，可刷 T-Money)。",
+            "車程約 70-80 分鐘。請在第一航廈 (T1) 下車 (酷航 Scoot)。"
+          ]
+        }
       },
       {
         id: id(),
