@@ -5,7 +5,7 @@ import { ToolsView } from './components/ToolsView';
 import { INITIAL_ITINERARY, ACCOMMODATION } from './constants';
 import { DailyPlan, ItineraryItem } from './types';
 import { analyzeItinerary } from './services/geminiService';
-import { Map, Briefcase, Settings, CloudSun, Sparkles, ChevronLeft, ChevronRight, Moon, Sun, MapPin, Trash2, Route } from 'lucide-react';
+import { Map, Briefcase, Settings, CloudSun, Sparkles, ChevronLeft, ChevronRight, Moon, Sun, MapPin, Trash2, Route, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState<'itinerary' | 'tools' | 'settings'>('itinerary');
@@ -228,6 +228,19 @@ export default function App() {
                       </div>
                    </div>
                    
+                   {/* Insurance Button (Only for 2/24) */}
+                   {activeDay.date.includes('2/24') && (
+                      <a 
+                        href="https://tokiomarinenichido.jp/zh-hant/china2/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 w-full py-2.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-rose-100 transition-colors"
+                      >
+                        <ShieldCheck size={14} />
+                        投保滑雪險 (Tokio Marine)
+                      </a>
+                   )}
+
                    <div className="flex gap-2 mt-4 pt-4 border-t border-indigo-100/50">
                       <button 
                         onClick={prevDay} 

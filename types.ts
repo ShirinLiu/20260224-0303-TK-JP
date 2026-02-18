@@ -5,7 +5,8 @@ export enum EventType {
   STAY = 'STAY',
   ACTIVITY = 'ACTIVITY',
   TRANSFER = 'TRANSFER',
-  SHOPPING = 'SHOPPING'
+  SHOPPING = 'SHOPPING',
+  FOOD = 'FOOD'
 }
 
 export interface Tag {

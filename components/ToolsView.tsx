@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FLIGHT_INFO, ACCOMMODATION } from '../constants';
-import { Plane, Hotel, AlertCircle, Phone, CreditCard, RefreshCw, TrendingDown, Wallet, ExternalLink, ArrowRight, X } from 'lucide-react';
+import { Plane, Hotel, AlertCircle, Phone, CreditCard, RefreshCw, TrendingDown, Wallet, ExternalLink, ArrowRight, X, NotebookPen, CheckCircle2, User, Plus, Coins } from 'lucide-react';
 
 // Manual update of approximate Visa rates (Simulated "Real-time")
 // Source reference: https://www.twrates.com/card/visa/jpy.html
@@ -12,7 +12,7 @@ const RATES = {
 const TRANS_FEE = 1.015; // 1.5% International transaction fee
 
 export const ToolsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'fund' | 'rate' | 'info'>('fund');
+  const [activeTab, setActiveTab] = useState<'fund' | 'accounting' | 'rate' | 'info'>('fund');
 
   // --- Fund State ---
   const INITIAL_FUND = 40000;
@@ -38,22 +38,66 @@ export const ToolsView: React.FC = () => {
 
   const addExpense = () => {
     if (newItem && newCost) {
-      setFundExpenses([{ 
+      setFundExpenses(prev => [{ 
         id: Date.now(), 
         item: newItem, 
         cost: parseInt(newCost),
         time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute:'2-digit' })
-      }, ...fundExpenses]);
+      }, ...prev]);
       setNewItem('');
       setNewCost('');
     }
   };
   
   const removeExpense = (id: number) => {
-      if(window.confirm('確定刪除此筆支出？')) {
-          setFundExpenses(fundExpenses.filter(e => e.id !== id));
-      }
+      // Removed confirm dialog for smoother mobile experience
+      setFundExpenses(prev => prev.filter(e => e.id !== id));
   }
+
+  // --- Accounting (External) State ---
+  // No longer using external URL, strictly local storage
+  const [accItem, setAccItem] = useState('');
+  const [accCost, setAccCost] = useState('');
+  const [payer, setPayer] = useState<'Ricky' | 'Serna'>('Ricky');
+  const [accCurrency, setAccCurrency] = useState<'JPY' | 'KRW' | 'TWD'>('JPY');
+  
+  // Storing simple text for history to maintain compatibility with existing structure
+  const [accHistory, setAccHistory] = useState<{id: number, text: string, time: string}[]>(() => {
+      try {
+          const saved = localStorage.getItem('zen_travel_acc_v1');
+          return saved ? JSON.parse(saved) : [];
+      } catch {
+          return [];
+      }
+  });
+
+  useEffect(() => {
+      localStorage.setItem('zen_travel_acc_v1', JSON.stringify(accHistory));
+  }, [accHistory]);
+
+  const handleAccountingSubmit = () => {
+      if (!accItem || !accCost) return;
+      
+      // Format: "Ricky 先付: 燒肉 5000 JPY"
+      const textToSave = `${payer} 先付: ${accItem} ${accCost} ${accCurrency}`;
+      
+      // Save Local History
+      const newEntry = {
+          id: Date.now(),
+          text: textToSave,
+          time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute:'2-digit' })
+      };
+      setAccHistory(prev => [newEntry, ...prev]);
+
+      // Reset Inputs
+      setAccItem('');
+      setAccCost('');
+  };
+  
+  const removeAccHistory = (id: number) => {
+      // Removed confirm dialog for smoother mobile experience
+      setAccHistory(prev => prev.filter(e => e.id !== id));
+  };
 
   // --- Rate State ---
   const [amount, setAmount] = useState<string>('1000');
@@ -70,19 +114,25 @@ export const ToolsView: React.FC = () => {
       <div className="flex bg-stone-200 p-1 rounded-xl mb-6 shadow-inner">
         <button 
           onClick={() => setActiveTab('fund')}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'fund' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'fund' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
           公費
         </button>
         <button 
+          onClick={() => setActiveTab('accounting')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'accounting' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+        >
+          記帳
+        </button>
+        <button 
           onClick={() => setActiveTab('rate')}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'rate' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'rate' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
           匯率
         </button>
         <button 
           onClick={() => setActiveTab('info')}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'info' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'info' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
           資訊
         </button>
@@ -174,12 +224,138 @@ export const ToolsView: React.FC = () => {
                                 -¥{e.cost.toLocaleString()}
                             </span>
                             <button 
-                                onClick={() => removeExpense(e.id)}
-                                className="p-1.5 rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                                type="button"
+                                onClick={(ev) => {
+                                    ev.stopPropagation();
+                                    removeExpense(e.id);
+                                }}
+                                className="p-3 rounded-full bg-stone-50 text-stone-400 active:bg-rose-100 active:text-rose-500 transition-colors shrink-0"
+                                aria-label="刪除"
                             >
-                                <X size={14} />
+                                <X size={18} />
                             </button>
                         </div>
+                    </div>
+                    ))}
+                    </div>
+               )}
+             </div>
+           </div>
+        </div>
+      )}
+
+      {activeTab === 'accounting' && (
+        <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+           {/* Intro Card */}
+           <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-bold uppercase tracking-wider">
+                    <NotebookPen size={14} /> Travel Ledger
+                </div>
+                <h3 className="text-2xl font-bold mb-2">代墊記帳</h3>
+                <p className="text-sm text-emerald-100 leading-relaxed mb-0">
+                    記錄先墊款的項目，資料僅儲存在此手機中，回國後方便結算。
+                </p>
+              </div>
+              <NotebookPen className="absolute -right-4 -bottom-4 text-emerald-800 w-32 h-32 opacity-20 rotate-[-12deg]" />
+           </div>
+
+           {/* Input Form */}
+           <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+             {/* Payer Selector */}
+             <div className="flex bg-stone-100 p-1 rounded-xl mb-2">
+                <button 
+                    onClick={() => setPayer('Ricky')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${payer === 'Ricky' ? 'bg-white shadow-sm text-sumi' : 'text-stone-400'}`}
+                >
+                    <User size={12} className={payer === 'Ricky' ? 'text-indigo-500' : ''} />
+                    Ricky 先付
+                </button>
+                <button 
+                    onClick={() => setPayer('Serna')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${payer === 'Serna' ? 'bg-white shadow-sm text-sumi' : 'text-stone-400'}`}
+                >
+                    <User size={12} className={payer === 'Serna' ? 'text-rose-500' : ''} />
+                    Serna 先付
+                </button>
+             </div>
+
+             {/* Currency Selector */}
+             <div className="flex bg-stone-100 p-1 rounded-xl mb-3">
+                {(['JPY', 'KRW', 'TWD'] as const).map((c) => (
+                  <button 
+                    key={c}
+                    onClick={() => setAccCurrency(c)}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${accCurrency === c ? 'bg-white shadow-sm text-sumi' : 'text-stone-400'}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+             </div>
+
+             <div className="flex gap-3 mb-3">
+               <input 
+                 type="text" 
+                 placeholder="項目 (e.g. 燒肉)" 
+                 value={accItem}
+                 onChange={(e) => setAccItem(e.target.value)}
+                 className="flex-[2] bg-stone-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-100 outline-none transition-all placeholder:text-stone-400"
+               />
+               <div className="relative flex-1">
+                   <input 
+                     type="number" 
+                     placeholder="金額" 
+                     value={accCost}
+                     onChange={(e) => setAccCost(e.target.value)}
+                     className="w-full bg-stone-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-mono font-bold text-sumi"
+                   />
+               </div>
+             </div>
+             <button 
+               onClick={handleAccountingSubmit}
+               disabled={!accItem || !accCost}
+               className="w-full bg-emerald-600 disabled:bg-stone-200 disabled:text-stone-400 text-white py-3 rounded-xl text-sm font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-emerald-100"
+             >
+               <Plus size={16} />
+               新增紀錄
+             </button>
+           </div>
+
+           {/* Local History */}
+           <div className="space-y-2">
+             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-2 flex justify-between items-center">
+                 <span>已儲存項目</span>
+             </h3>
+             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-stone-100 min-h-[100px]">
+               {accHistory.length === 0 ? (
+                   <div className="p-8 text-center flex flex-col items-center justify-center text-stone-300">
+                       <NotebookPen size={24} className="mb-2 opacity-50" />
+                       <span className="text-xs">尚無紀錄</span>
+                   </div>
+               ) : (
+                   <div className="divide-y divide-stone-50">
+                   {accHistory.map((e) => (
+                    <div key={e.id} className="flex justify-between items-center p-4 hover:bg-stone-50 transition-colors group">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-stone-100 text-stone-400">
+                                <CheckCircle2 size={14} />
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-sumi">{e.text}</div>
+                                <div className="text-[10px] text-stone-400">{e.time}</div>
+                            </div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={(ev) => {
+                                ev.stopPropagation();
+                                removeAccHistory(e.id);
+                            }}
+                            className="p-3 rounded-full bg-stone-50 text-stone-400 active:bg-rose-100 active:text-rose-500 transition-colors shrink-0"
+                            aria-label="刪除"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
                     ))}
                     </div>

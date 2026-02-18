@@ -1,3 +1,4 @@
+
 import { DailyPlan, EventType } from './types';
 
 // Helper to create IDs
@@ -1049,19 +1050,191 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         type: EventType.TRANSFER,
         title: "從飯店出發",
         startLocation: "Wecostay Namsan",
-        endLocation: "Dongdaemun",
-        walkingRoute: "地鐵忠武路站「5/6號出口」 (步行1-2分)"
+        endLocation: "Seongsu Station",
+        startTime: "10:30",
+        endTime: "11:00",
+        walkingRoute: "地鐵忠武路站 ➜ 聖水站 (約 30 分)"
+      },
+      {
+        id: id(),
+        date: "3/2 (一)",
+        type: EventType.SHOPPING,
+        title: "聖水洞逛街攻略 (11大精選)",
+        startLocation: "Seongsu Station",
+        endLocation: "Seongsu Area",
+        startTime: "11:00",
+        endTime: "18:00",
+        notes: "韓國布魯克林，廢棄工廠改建的潮流聖地。建議路線：聖水站 3 號出口開始，順時針逛一圈。",
+        tags: [{ label: "潮流聖地", type: "shopping" }, { label: "11個站點", type: "info" }],
+        walkingRoute: "聖水洞區域步行",
+        subItems: [
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.FOOD,
+                title: "1. 韓貞仙 (Hanjeonseon)",
+                startLocation: "Seongsu Stn.",
+                endLocation: "Hanjeonseon",
+                startTime: "11:00",
+                endTime: "11:20",
+                navLink: "https://naver.me/FxCEj0hI",
+                notes: "超人氣水果大福專賣店。適合買來當開胃甜點。",
+                tags: [{ label: "杜拜巧克力", type: "food" }],
+                guideRecommendation: {
+                    mustOrder: "杜拜巧克力大福 (熱門), 草莓大福",
+                    tips: "杜拜巧克力口味非常搶手，建議一到聖水洞先來買。"
+                }
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "2. Musinsa Empty Seongsu",
+                startLocation: "Hanjeonseon",
+                endLocation: "Musinsa Empty",
+                startTime: "11:30",
+                endTime: "12:15",
+                navLink: "https://naver.me/5KqFeSSU",
+                notes: "韓國最大時尚電商 Musinsa 的實體選物店。工業風裝潢非常有特色。",
+                tags: [{ label: "小眾品牌", type: "shopping" }, { label: "選物店", type: "info" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "3. Nyunyu Seongsu",
+                startLocation: "Musinsa Empty",
+                endLocation: "Nyunyu Seongsu",
+                startTime: "12:20",
+                endTime: "12:50",
+                navLink: "https://naver.me/Giarn1e8",
+                notes: "東大門飾品批發的聖水店。陳列比東大門店更有質感，款式極多。",
+                tags: [{ label: "飾品批發", type: "shopping" }, { label: "平價", type: "info" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "4. Stand Oil",
+                startLocation: "Nyunyu",
+                endLocation: "Stand Oil",
+                startTime: "13:00",
+                endTime: "13:40",
+                navLink: "https://naver.me/5zXijpCx",
+                notes: "韓國國民包包品牌。必逛旗艦店，店內有旋轉輸送帶展示，非常好拍。",
+                tags: [{ label: "必買包包", type: "shopping" }, { label: "Chubby Bag", type: "shopping" }],
+                guideRecommendation: {
+                    mustOrder: "Chubby Bag (保齡球包), Oblong Bag (經典方包)",
+                    tips: "店內人潮通常很多，建議先在官網看好款式，現場直接試背結帳。"
+                }
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "5. 29CM Seongsu",
+                startLocation: "Stand Oil",
+                endLocation: "Igu Home (29CM)",
+                startTime: "13:50",
+                endTime: "14:20",
+                navLink: "https://naver.me/GPlQw0UT",
+                notes: "高質感生活選物店。從文具、香氛到服飾都有。",
+                tags: [{ label: "生活質感", type: "shopping" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.ACTIVITY,
+                title: "6. DIOR Seongsu (拍照)",
+                startLocation: "29CM",
+                endLocation: "DIOR Seongsu",
+                startTime: "14:25",
+                endTime: "14:40",
+                navLink: "https://naver.me/I5yulb3q",
+                notes: "聖水洞著名地標。建議在門口拍照打卡即可 (入內需預約)。",
+                tags: [{ label: "網美打卡", type: "info" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "7. Hetras",
+                startLocation: "DIOR",
+                endLocation: "Hetras Seongsu",
+                startTime: "14:45",
+                endTime: "15:15",
+                navLink: "https://naver.me/xt4PPmUF",
+                notes: "CP值極高的香氛品牌。擴香瓶容量大且便宜，送禮自用兩相宜。",
+                tags: [{ label: "平價擴香", type: "shopping" }],
+                guideRecommendation: {
+                    mustOrder: "Flower Shop (花店香), Hotel Wood (木質調)",
+                    tips: "擴香瓶頗重，建議留到最後或確認行李重量再購買。"
+                }
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "8. Blue Elephant",
+                startLocation: "Hetras",
+                endLocation: "Blue Elephant",
+                startTime: "15:20",
+                endTime: "15:50",
+                navLink: "https://naver.me/GdlG5IuI",
+                notes: "被稱為「平價版 Gentle Monster」。設計感強但價格親民 (約 GM 的 1/3)。",
+                tags: [{ label: "平價墨鏡", type: "shopping" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "9. Rieti",
+                startLocation: "Blue Elephant",
+                endLocation: "Rieti",
+                startTime: "15:55",
+                endTime: "16:15",
+                navLink: "https://naver.me/5NMX7yUN",
+                notes: "另一家平價墨鏡選擇。位於 Matin Kim 對面小店 2 樓。",
+                tags: [{ label: "徐睿知同款", type: "shopping" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "10. Shiro Seongsu",
+                startLocation: "Rieti",
+                endLocation: "Shiro",
+                startTime: "16:20",
+                endTime: "16:40",
+                navLink: "https://naver.me/GXgeNslR",
+                notes: "來自日本北海道的純淨保養品牌。店內充滿白茶與皂香的療癒香氣。",
+                tags: [{ label: "白茶香水", type: "shopping" }]
+            },
+            {
+                id: id(),
+                date: "3/2 (一)",
+                type: EventType.SHOPPING,
+                title: "11. Gentle Monster Haus Nowhere",
+                startLocation: "Shiro",
+                endLocation: "Gentle Monster",
+                startTime: "16:50",
+                endTime: "17:30",
+                navLink: "https://naver.me/GbAqTby0",
+                notes: "不僅是眼鏡店，更像是一座美術館。集結 Tamburins (香氛) 與 Nudake (甜點)。",
+                tags: [{ label: "必逛地標", type: "shopping" }, { label: "Jennie同款", type: "shopping" }]
+            }
+        ]
       },
       {
         id: id(),
         date: "3/2 (一)",
         type: EventType.STAY,
         title: "返回飯店",
-        startLocation: "首爾市區",
+        startLocation: "聖水洞",
         endLocation: "Wecostay Namsan",
         notes: "續住 Wecostay 南山住宿",
         navLink: "https://naver.me/G2EwQEal",
-        walkingRoute: "地鐵忠武路站「5/6號出口」 (步行1-2分)"
+        walkingRoute: "地鐵聖水站 ➜ 忠武路站"
       }
     ]
   },
