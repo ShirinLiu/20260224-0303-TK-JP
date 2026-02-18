@@ -35,8 +35,13 @@ const TagBadge: React.FC<{ tag: Tag }> = ({ tag }) => {
 
 export const EventCard: React.FC<EventCardProps> = ({ item, onClick }) => {
   
+  // Check if this is a food/restaurant item based on tags
+  const isFood = item.tags?.some(t => t.type === 'food');
+
   // Icon Selection
   const getIcon = () => {
+    if (isFood) return <Utensils size={16} className="text-orange-500" />;
+
     switch (item.type) {
         case EventType.FLIGHT: return <Plane size={16} className="text-sky-600" />;
         case EventType.TRAIN: return <Train size={16} className="text-emerald-600" />;
@@ -48,6 +53,8 @@ export const EventCard: React.FC<EventCardProps> = ({ item, onClick }) => {
 
   // Card Border Color logic
   const getBorderColor = () => {
+     if (isFood) return 'border-l-orange-300';
+
      switch(item.type) {
          case EventType.FLIGHT: return 'border-l-sky-400';
          case EventType.TRAIN: return 'border-l-emerald-400';
