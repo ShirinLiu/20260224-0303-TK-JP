@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ItineraryItem, EventType, Tag } from '../types';
 import { Plane, Train, MapPin, BedDouble, ShoppingBag, ChevronRight, Utensils, AlertTriangle, Receipt, ArrowRight } from 'lucide-react';
@@ -36,8 +35,8 @@ const TagBadge: React.FC<{ tag: Tag }> = ({ tag }) => {
 
 export const EventCard: React.FC<EventCardProps> = ({ item, onClick }) => {
   
-  // Check if this is a food/restaurant item based on tags or type
-  const isFood = item.tags?.some(t => t.type === 'food') || item.type === EventType.FOOD;
+  // Check if this is a food/restaurant item based on tags
+  const isFood = item.tags?.some(t => t.type === 'food');
 
   // Icon Selection
   const getIcon = () => {
