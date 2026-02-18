@@ -1059,7 +1059,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         id: id(),
         date: "3/2 (一)",
         type: EventType.SHOPPING,
-        title: "聖水洞逛街攻略 (11大精選)",
+        title: "聖水洞逛街攻略",
         startLocation: "Seongsu Station",
         endLocation: "Seongsu Area",
         startTime: "11:00",
