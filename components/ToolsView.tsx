@@ -1,61 +1,315 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FLIGHT_INFO, ACCOMMODATION } from '../constants';
-import { Plane, Hotel, AlertCircle, Calculator, Phone, CreditCard } from 'lucide-react';
+import { Plane, Hotel, AlertCircle, Phone, CreditCard, RefreshCw, TrendingDown, Wallet, ExternalLink, ArrowRight, X } from 'lucide-react';
+
+// Manual update of approximate Visa rates (Simulated "Real-time")
+// Source reference: https://www.twrates.com/card/visa/jpy.html
+const RATES = {
+  JPY: 0.2185, // Approx recent Visa rate
+  KRW: 0.0238  // Approx recent Visa rate
+};
+
+const TRANS_FEE = 1.015; // 1.5% International transaction fee
 
 export const ToolsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'info' | 'budget'>('info');
-  const [expenses, setExpenses] = useState([
-    { id: 1, item: '機票 (預估)', cost: 12000 },
-    { id: 2, item: 'JR Pass / 新幹線', cost: 6000 },
-    { id: 3, item: '住宿 (7晚)', cost: 15000 },
-  ]);
+  const [activeTab, setActiveTab] = useState<'fund' | 'rate' | 'info'>('fund');
+
+  // --- Fund State ---
+  const INITIAL_FUND = 40000;
+  const [fundExpenses, setFundExpenses] = useState<{id: number, item: string, cost: number, time: string}[]>(() => {
+    try {
+        const saved = localStorage.getItem('zen_travel_fund_v1');
+        return saved ? JSON.parse(saved) : [];
+    } catch {
+        return [];
+    }
+  });
+  
   const [newItem, setNewItem] = useState('');
   const [newCost, setNewCost] = useState('');
 
+  useEffect(() => {
+    localStorage.setItem('zen_travel_fund_v1', JSON.stringify(fundExpenses));
+  }, [fundExpenses]);
+
+  const totalSpent = fundExpenses.reduce((acc, curr) => acc + curr.cost, 0);
+  const remaining = INITIAL_FUND - totalSpent;
+  const percentLeft = Math.max(0, (remaining / INITIAL_FUND) * 100);
+
   const addExpense = () => {
     if (newItem && newCost) {
-      setExpenses([...expenses, { id: Date.now(), item: newItem, cost: parseInt(newCost) }]);
+      setFundExpenses([{ 
+        id: Date.now(), 
+        item: newItem, 
+        cost: parseInt(newCost),
+        time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute:'2-digit' })
+      }, ...fundExpenses]);
       setNewItem('');
       setNewCost('');
     }
   };
+  
+  const removeExpense = (id: number) => {
+      if(window.confirm('確定刪除此筆支出？')) {
+          setFundExpenses(fundExpenses.filter(e => e.id !== id));
+      }
+  }
 
-  const total = expenses.reduce((acc, curr) => acc + curr.cost, 0);
+  // --- Rate State ---
+  const [amount, setAmount] = useState<string>('1000');
+  const [currencyMode, setCurrencyMode] = useState<'JPY' | 'KRW'>('JPY');
+
+  const rawRate = currencyMode === 'JPY' ? RATES.JPY : RATES.KRW;
+  const rawTwd = Math.round(parseFloat(amount || '0') * rawRate);
+  const feeTwd = Math.round(parseFloat(amount || '0') * rawRate * TRANS_FEE);
 
   return (
     <div className="pb-24 pt-4 px-4 max-w-md mx-auto">
       
       {/* Tab Switcher */}
-      <div className="flex bg-stone-200 p-1 rounded-xl mb-6">
+      <div className="flex bg-stone-200 p-1 rounded-xl mb-6 shadow-inner">
         <button 
-          onClick={() => setActiveTab('info')}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'info' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500'}`}
+          onClick={() => setActiveTab('fund')}
+          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'fund' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
-          行程資訊
+          公費
         </button>
         <button 
-          onClick={() => setActiveTab('budget')}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'budget' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500'}`}
+          onClick={() => setActiveTab('rate')}
+          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'rate' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
-          記帳/預算
+          匯率
+        </button>
+        <button 
+          onClick={() => setActiveTab('info')}
+          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'info' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+        >
+          資訊
         </button>
       </div>
 
-      {activeTab === 'info' ? (
-        <div className="space-y-6">
+      {activeTab === 'fund' && (
+        <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+           {/* Fund Summary Card */}
+           <div className="bg-sumi text-washi p-6 rounded-3xl shadow-xl relative overflow-hidden">
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-2">Common Fund Remaining</div>
+                <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-lg font-light text-stone-400">¥</span>
+                    <span className={`text-5xl font-mono font-bold tracking-tighter ${remaining < 0 ? 'text-rose-400' : 'text-white'}`}>
+                        {remaining.toLocaleString()}
+                    </span>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="w-full h-1.5 bg-stone-800 rounded-full mt-2 overflow-hidden">
+                    <div 
+                        className={`h-full rounded-full transition-all duration-500 ${percentLeft < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} 
+                        style={{width: `${percentLeft}%`}}
+                    ></div>
+                </div>
+                <div className="flex justify-between w-full mt-1.5">
+                    <span className="text-[10px] text-stone-500">Spent: ¥{totalSpent.toLocaleString()}</span>
+                    <span className="text-[10px] text-stone-500">Initial: ¥{INITIAL_FUND.toLocaleString()}</span>
+                </div>
+              </div>
+              <Wallet className="absolute -left-6 -bottom-6 text-stone-800 w-32 h-32 opacity-30 rotate-12" />
+           </div>
+
+           {/* Add Expense Form */}
+           <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+             <div className="flex gap-3 mb-3">
+               <input 
+                 type="text" 
+                 placeholder="項目 (e.g. 章魚燒)" 
+                 value={newItem}
+                 onChange={(e) => setNewItem(e.target.value)}
+                 className="flex-[2] bg-stone-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-stone-400"
+               />
+               <div className="flex-1 relative">
+                   <span className="absolute left-3 top-3 text-stone-400 text-sm font-bold">¥</span>
+                   <input 
+                     type="number" 
+                     placeholder="0" 
+                     value={newCost}
+                     onChange={(e) => setNewCost(e.target.value)}
+                     className="w-full bg-stone-50 border-none rounded-xl p-3 pl-7 text-sm focus:ring-2 focus:ring-indigo-100 outline-none transition-all font-mono font-bold text-sumi"
+                   />
+               </div>
+             </div>
+             <button 
+               onClick={addExpense}
+               disabled={!newItem || !newCost}
+               className="w-full bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 text-white py-3 rounded-xl text-sm font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+             >
+               <TrendingDown size={16} />
+               扣除支出
+             </button>
+           </div>
+
+           {/* Expenses List */}
+           <div className="space-y-2">
+             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-2">Transaction History</h3>
+             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-stone-100 min-h-[100px]">
+               {fundExpenses.length === 0 ? (
+                   <div className="p-8 text-center flex flex-col items-center justify-center text-stone-300">
+                       <Wallet size={24} className="mb-2 opacity-50" />
+                       <span className="text-xs">尚未有支出紀錄</span>
+                   </div>
+               ) : (
+                   <div className="divide-y divide-stone-50">
+                   {fundExpenses.map((e) => (
+                    <div key={e.id} className="flex justify-between items-center p-4 hover:bg-stone-50 transition-colors group">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 group-hover:bg-rose-100 group-hover:text-rose-500 transition-colors">
+                                <CreditCard size={14} />
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-sumi">{e.item}</div>
+                                <div className="text-[10px] text-stone-400">{e.time}</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="font-mono text-sumi font-bold group-hover:line-through decoration-rose-400 decoration-2 transition-all">
+                                -¥{e.cost.toLocaleString()}
+                            </span>
+                            <button 
+                                onClick={() => removeExpense(e.id)}
+                                className="p-1.5 rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </div>
+                    ))}
+                    </div>
+               )}
+             </div>
+           </div>
+        </div>
+      )}
+
+      {activeTab === 'rate' && (
+        <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-sumi flex items-center gap-2">
+                        <RefreshCw size={20} className="text-indigo-600" /> 
+                        Visa 匯率試算
+                    </h3>
+                    <a 
+                        href="https://www.twrates.com/card/visa/jpy.html" 
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] flex items-center gap-1 text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full hover:bg-indigo-100 transition-colors"
+                    >
+                        查看來源 <ExternalLink size={10} />
+                    </a>
+                </div>
+
+                {/* Toggle */}
+                <div className="flex bg-stone-100 p-1.5 rounded-xl mb-6">
+                    <button 
+                        onClick={() => setCurrencyMode('JPY')}
+                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'JPY' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
+                    >
+                        <span>🇯🇵 JPY</span>
+                        <ArrowRight size={12} className="opacity-50" />
+                        <span>🇹🇼 TWD</span>
+                    </button>
+                    <button 
+                        onClick={() => setCurrencyMode('KRW')}
+                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'KRW' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
+                    >
+                        <span>🇰🇷 KRW</span>
+                        <ArrowRight size={12} className="opacity-50" />
+                        <span>🇹🇼 TWD</span>
+                    </button>
+                </div>
+
+                {/* Input Area */}
+                <div className="space-y-4 relative">
+                    {/* Input */}
+                    <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1 block">
+                            {currencyMode === 'JPY' ? '日幣金額' : '韓幣金額'}
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-stone-300">{currencyMode === 'JPY' ? '¥' : '₩'}</span>
+                            <input 
+                                type="number" 
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="w-full bg-transparent border-none text-3xl font-mono font-bold text-sumi focus:outline-none p-0"
+                                placeholder="1000"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="absolute left-1/2 -translate-x-1/2 top-[42%] z-10 bg-white rounded-full p-1.5 shadow-sm border border-stone-100">
+                        <TrendingDown size={16} className="text-stone-300" />
+                    </div>
+
+                    {/* Output Cards */}
+                    <div className="grid gap-3">
+                        {/* With Fee (Primary) */}
+                        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl p-4 shadow-sm">
+                            <div className="flex justify-between items-start mb-1">
+                                <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                                    <CreditCard size={10} />
+                                    含 1.5% 手續費
+                                </label>
+                                <span className="text-[10px] bg-white text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100">推薦參考</span>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-sm font-bold text-indigo-300">$</span>
+                                <span className="text-3xl font-mono font-bold text-indigo-700">{feeTwd.toLocaleString()}</span>
+                                <span className="text-sm font-bold text-indigo-300">TWD</span>
+                            </div>
+                        </div>
+
+                        {/* Raw Rate (Secondary) */}
+                        <div className="bg-stone-50 border border-stone-100 rounded-2xl p-4">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1 block">
+                                Visa 原始匯率 (未稅)
+                            </label>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-sm font-bold text-stone-300">$</span>
+                                <span className="text-xl font-mono font-bold text-stone-600">{rawTwd.toLocaleString()}</span>
+                                <span className="text-sm font-bold text-stone-300">TWD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Rate Info Footer */}
+                <div className="mt-6 text-center">
+                    <p className="text-[10px] text-stone-400">
+                        當前 Visa 參考匯率: 1 {currencyMode} ≈ {rawRate} TWD
+                    </p>
+                    <p className="text-[9px] text-stone-300 mt-1">
+                        實際扣款金額以銀行帳單為準
+                    </p>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {activeTab === 'info' && (
+        <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
           {/* Flights */}
           <section>
-            <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Plane size={16} /> 航班資訊
+            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
+              <Plane size={14} /> 航班資訊
             </h3>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-stone-100">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50 border border-stone-100">
               {FLIGHT_INFO.map((f, i) => (
-                <div key={i} className="p-4 flex justify-between items-center">
+                <div key={i} className="p-4 flex justify-between items-center hover:bg-stone-50 transition-colors">
                   <div>
-                    <div className="font-bold text-sumi">{f.route}</div>
-                    <div className="text-xs text-stone-500">{f.time}</div>
+                    <div className="font-bold text-sumi text-sm">{f.route}</div>
+                    <div className="text-xs text-stone-500 mt-0.5">{f.time}</div>
                   </div>
-                  <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-mono">{f.no}</span>
+                  <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded-md text-xs font-mono font-bold">{f.no}</span>
                 </div>
               ))}
             </div>
@@ -63,18 +317,19 @@ export const ToolsView: React.FC = () => {
 
           {/* Accommodation */}
           <section>
-            <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Hotel size={16} /> 住宿資訊
+            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
+              <Hotel size={14} /> 住宿資訊
             </h3>
             <div className="space-y-3">
               {ACCOMMODATION.map((h, i) => (
-                <div key={i} className="bg-white p-4 rounded-xl shadow-sm">
-                  <div className="flex justify-between items-start">
+                <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+                  <div className="flex justify-between items-start mb-2">
                     <h4 className="font-bold text-sumi text-sm">{h.name}</h4>
-                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{h.dates}</span>
+                    <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-bold">{h.dates}</span>
                   </div>
-                  <p className="text-xs text-stone-500 mt-2 flex items-start gap-1">
-                     <span className="min-w-fit">📍</span> {h.address}
+                  <p className="text-xs text-stone-500 flex items-start gap-1.5">
+                     <span className="min-w-fit mt-0.5 opacity-50"><Hotel size={12}/></span> 
+                     {h.address}
                   </p>
                 </div>
               ))}
@@ -83,78 +338,31 @@ export const ToolsView: React.FC = () => {
 
           {/* Emergency */}
           <section>
-             <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <AlertCircle size={16} /> 緊急聯絡
+             <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
+              <AlertCircle size={14} /> 緊急聯絡
             </h3>
-            <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
-               <div className="flex items-center gap-3 mb-2">
-                 <Phone size={18} className="text-rose-600" />
+            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 space-y-4">
+               <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                    <Phone size={18} />
+                 </div>
                  <div>
-                   <div className="text-sm font-bold text-rose-800">日本救護車/火警: 119</div>
-                   <div className="text-xs text-rose-600">警察局: 110</div>
+                   <div className="text-sm font-bold text-rose-800">日本 JP</div>
+                   <div className="text-xs text-rose-600/80 mt-0.5">救護車/火警 119 &bull; 警察局 110</div>
                  </div>
                </div>
-               <div className="flex items-center gap-3">
-                 <Phone size={18} className="text-rose-600" />
+               <div className="w-full h-px bg-rose-200/50"></div>
+               <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                    <Phone size={18} />
+                 </div>
                  <div>
-                   <div className="text-sm font-bold text-rose-800">韓國緊急專線: 119</div>
-                   <div className="text-xs text-rose-600">外國人旅遊諮詢: 1330</div>
+                   <div className="text-sm font-bold text-rose-800">韓國 KR</div>
+                   <div className="text-xs text-rose-600/80 mt-0.5">緊急專線 119 &bull; 旅遊諮詢 1330</div>
                  </div>
                </div>
             </div>
           </section>
-        </div>
-      ) : (
-        <div className="space-y-4">
-           {/* Budget Summary */}
-           <div className="bg-sumi text-washi p-6 rounded-2xl shadow-lg relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="text-stone-400 text-sm mb-1">總預算花費 (TWD)</div>
-                <div className="text-3xl font-bold font-mono tracking-tight">${total.toLocaleString()}</div>
-              </div>
-              <Calculator className="absolute right-[-10px] bottom-[-10px] text-stone-700 opacity-20 w-32 h-32" />
-           </div>
-
-           {/* Add Item */}
-           <div className="bg-white p-4 rounded-xl shadow-sm">
-             <div className="flex gap-2 mb-2">
-               <input 
-                 type="text" 
-                 placeholder="項目 (e.g. 晚餐)" 
-                 value={newItem}
-                 onChange={(e) => setNewItem(e.target.value)}
-                 className="flex-1 bg-stone-50 border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-               />
-               <input 
-                 type="number" 
-                 placeholder="$" 
-                 value={newCost}
-                 onChange={(e) => setNewCost(e.target.value)}
-                 className="w-20 bg-stone-50 border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-               />
-             </div>
-             <button 
-               onClick={addExpense}
-               className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform"
-             >
-               新增支出
-             </button>
-           </div>
-
-           {/* List */}
-           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-             {expenses.map((e) => (
-               <div key={e.id} className="flex justify-between items-center p-4 border-b border-stone-100 last:border-0">
-                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
-                     <CreditCard size={14} className="text-stone-500" />
-                   </div>
-                   <span className="text-sm font-medium text-stone-700">{e.item}</span>
-                 </div>
-                 <span className="font-mono text-stone-900 font-bold">${e.cost.toLocaleString()}</span>
-               </div>
-             ))}
-           </div>
         </div>
       )}
     </div>
