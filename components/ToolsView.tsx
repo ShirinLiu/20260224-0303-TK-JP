@@ -260,6 +260,17 @@ export const ToolsView: React.FC = () => {
               <NotebookPen className="absolute -right-4 -bottom-4 text-emerald-800 w-32 h-32 opacity-20 rotate-[-12deg]" />
            </div>
 
+           {/* LINE Link Button */}
+           <a 
+             href="https://liff.line.me/1655320992-Y8GowEpw/g/bRhNnFFSVPfNApeqd4gDhA"
+             target="_blank"
+             rel="noreferrer" 
+             className="flex items-center justify-center gap-2 w-full py-3 bg-[#06C755] text-white rounded-2xl shadow-sm font-bold text-sm active:scale-95 transition-transform"
+           >
+             <ExternalLink size={16} />
+             開啟 Line 分帳群組
+           </a>
+
            {/* Input Form */}
            <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
              {/* Payer Selector */}
