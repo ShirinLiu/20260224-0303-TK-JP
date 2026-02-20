@@ -172,15 +172,28 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-washi/95 backdrop-blur-md border-b border-stone-200 shadow-sm">
         <div className="px-4 py-3 flex justify-between items-center">
-          <h1 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <img 
-              src="https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/apple-touch-icon.jpg" 
-              className="w-8 h-8 rounded-full border border-stone-200 shadow-sm object-cover"
-              alt="App Icon"
-            />
-            <span>20260224-0303</span>
-            <span className="text-[10px] bg-sumi text-white px-1.5 py-0.5 rounded uppercase tracking-wider">JP & KR</span>
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <img 
+                src="https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/apple-touch-icon.jpg" 
+                className="w-8 h-8 rounded-full border border-stone-200 shadow-sm object-cover"
+                alt="Icon 1"
+              />
+              <img 
+                src="https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/umi.jpg" 
+                className="w-8 h-8 rounded-full border border-stone-200 shadow-sm object-cover"
+                alt="Icon 2"
+              />
+              <img 
+                src="https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/una.png" 
+                className="w-8 h-8 rounded-full border border-stone-200 shadow-sm object-cover bg-stone-200"
+                alt="Icon 3"
+              />
+            </div>
+            <span className="text-sm font-bold text-sumi tracking-tight">0224-0303</span>
+            <span className="text-[10px] bg-sumi text-white px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">JP & KR</span>
+          </div>
+          
           {view === 'itinerary' && (
             <button 
               onClick={handleAnalyze}

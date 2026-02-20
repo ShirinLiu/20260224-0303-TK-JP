@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import { ItineraryItem, Tag, EventType } from '../types';
 import { 
   X, MapPin, Navigation, Clock, Image as ImageIcon, 
-  Trash2, Camera, Sparkles, ChefHat, Info, Plus, Footprints, ArrowRight, CornerDownRight, ExternalLink, Route
+  Trash2, Camera, Sparkles, ChefHat, Info, Plus, Footprints, ArrowRight, CornerDownRight, ExternalLink, Route, QrCode
 } from 'lucide-react';
 
 interface EventDetailSheetProps {
@@ -318,13 +318,17 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
             {/* Main Navigation Button (Only for single items) */}
             {!hasSubItems && (
                 <>
-                    <button 
-                        onClick={() => openMap(item)}
-                        className={`w-full py-3 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform ${shouldUseNaver(item) ? 'bg-[#03C75A] shadow-green-100' : 'bg-ai shadow-indigo-200'}`}
-                    >
-                        <Navigation size={18} />
-                        {shouldUseNaver(item) ? '開始導航 (Naver Map)' : '開始導航 (Google Maps)'}
-                    </button>
+                    {/* Navigation Button - Hidden for Flights */}
+                    {item.type !== EventType.FLIGHT && (
+                        <button 
+                            onClick={() => openMap(item)}
+                            className={`w-full py-3 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform ${shouldUseNaver(item) ? 'bg-[#03C75A] shadow-green-100' : 'bg-ai shadow-indigo-200'}`}
+                        >
+                            <Navigation size={18} />
+                            {shouldUseNaver(item) ? '開始導航 (Naver Map)' : '開始導航 (Google Maps)'}
+                        </button>
+                    )}
+
                     {/* Reference Link Button (CatchTable etc) */}
                     {item.referenceLink && (
                         <button 
@@ -335,9 +339,31 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
                             {item.referenceLink.label}
                         </button>
                     )}
-                    <div className="text-[10px] text-stone-400 text-center mt-2">
-                        導航目的地: {getNavTarget(item)}
-                    </div>
+
+                    {/* VJW Buttons for 2/24 Flight */}
+                    {item.date.includes('2/24') && item.type === EventType.FLIGHT && (
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                            <button 
+                                onClick={() => window.open('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Ricky.JPG', '_blank')}
+                                className="py-3 bg-stone-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-700 active:scale-95 transition-transform text-sm"
+                            >
+                                <QrCode size={16} /> VJW Ricky
+                            </button>
+                            <button 
+                                onClick={() => window.open('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Serna.JPG', '_blank')}
+                                className="py-3 bg-stone-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-700 active:scale-95 transition-transform text-sm"
+                            >
+                                <QrCode size={16} /> VJW Serna
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Navigation Target Text */}
+                    {item.type !== EventType.FLIGHT && (
+                        <div className="text-[10px] text-stone-400 text-center mt-2">
+                            導航目的地: {getNavTarget(item)}
+                        </div>
+                    )}
                 </>
             )}
 
