@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { EventCard } from './components/EventCard';
 import { EventDetailSheet } from './components/EventDetailSheet';
@@ -171,8 +172,14 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-washi/95 backdrop-blur-md border-b border-stone-200 shadow-sm">
         <div className="px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            20260224-0303 <span className="text-[10px] bg-sumi text-white px-1.5 py-0.5 rounded uppercase tracking-wider">JP & KR</span>
+          <h1 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <img 
+              src="https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/apple-touch-icon.jpg" 
+              className="w-8 h-8 rounded-full border border-stone-200 shadow-sm object-cover"
+              alt="App Icon"
+            />
+            <span>20260224-0303</span>
+            <span className="text-[10px] bg-sumi text-white px-1.5 py-0.5 rounded uppercase tracking-wider">JP & KR</span>
           </h1>
           {view === 'itinerary' && (
             <button 

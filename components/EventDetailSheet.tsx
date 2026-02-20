@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { ItineraryItem, Tag, EventType } from '../types';
 import { 
@@ -70,7 +71,7 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
     : (i.endLocation || i.startLocation || '');
 
   const isKoreaLocation = (loc: string) => {
-    const koreaKeywords = ['Seoul', 'Incheon', '首爾', '仁川', 'Wecostay', 'Ggupdang', 'Egg Clinic', '忠武路', 'Myeongdong', 'Korea', 'Dongdaemun', '東大門', '金豬', 'Geumdaeji', 'Sindang', '新堂', 'Dosan', '島山', 'Bagel'];
+    const koreaKeywords = ['Seoul', 'Incheon', '首爾', '仁川', 'Wecostay', 'Ggupdang', 'Egg Clinic', '忠武路', 'Myeongdong', 'Korea', 'Dongdaemun', '東大門', '金豬', 'Geumdaeji', 'Sindang', '新堂', 'Dosan', '島山', 'Bagel', 'Seongsu', '聖水'];
     return koreaKeywords.some(k => loc.toLowerCase().includes(k.toLowerCase())) || /[\u3131-\uD79D]/.test(loc);
   };
 
@@ -91,7 +92,7 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
         return false;
     }
 
-    return isKoreaLocation(getNavTarget(i));
+    return isKoreaLocation(getNavTarget(i)) || isKoreaLocation(i.title);
   };
 
   const openMap = (i: ItineraryItem) => {
@@ -103,6 +104,7 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
     if (!loc) return;
     
     if (shouldUseNaver(i)) {
+       // Using Naver Map Search URL for single location
        window.open(`https://map.naver.com/p/search/${encodeURIComponent(loc)}`, '_blank');
     } else {
        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}&travelmode=driving`, '_blank');
@@ -112,21 +114,62 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
   const openMultiStopRoute = () => {
       if (!item.subItems || item.subItems.length === 0) return;
       
-      // Origin: Main item start location (e.g. Sushi Ishiyama)
-      const origin = item.startLocation || item.subItems[0].startLocation;
+      // Origin: Main item start location (e.g. Jojo Kalguksu)
+      const origin = item.startLocation || item.subItems[0].startLocation || '';
       
-      // Destination: Last sub-item end location (e.g. Don Quijote)
+      // Destination: Last sub-item end location (e.g. Gentle Monster)
       const lastItem = item.subItems[item.subItems.length - 1];
-      const destination = lastItem.endLocation;
+      const destination = lastItem.endLocation || '';
 
-      // Waypoints: All sub-items end locations except the last one (Intermediate stops)
+      if (shouldUseNaver(item)) {
+          // Naver Map Strategy:
+          // Web doesn't support waypoints easily.
+          // App (nmap://) supports 'v1name', 'v2name' etc. to pre-fill names.
+          // Note: Naver Map limits waypoints (usually max 5).
+          
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+              // Construct nmap:// URL scheme
+              let nmapUrl = `nmap://route/walk?sname=${encodeURIComponent(origin)}&dname=${encodeURIComponent(destination)}`;
+              
+              // Add up to 5 waypoints from subItems (excluding the last one which is destination)
+              const waypoints = item.subItems.slice(0, item.subItems.length - 1);
+              
+              waypoints.slice(0, 5).forEach((sub, idx) => {
+                  const wpName = sub.endLocation || sub.title;
+                  if (wpName) {
+                    nmapUrl += `&v${idx + 1}name=${encodeURIComponent(wpName)}`;
+                  }
+              });
+              
+              nmapUrl += "&appname=com.shirin.travel"; // Good practice
+
+              // Attempt to open App
+              window.location.href = nmapUrl;
+
+              // Fallback to web (Start -> End only) if app not installed or fails
+              setTimeout(() => {
+                 if (document.hidden) return;
+                 // Use mobile web route for fallback
+                 window.open(`https://m.map.naver.com/route/walk/search.naver?sname=${encodeURIComponent(origin)}&dname=${encodeURIComponent(destination)}`, '_blank');
+              }, 2500);
+          } else {
+              // Desktop Web Fallback (Start -> End)
+              const webUrl = `https://map.naver.com/p/directions/-/-/-/transit?sname=${encodeURIComponent(origin)}&eName=${encodeURIComponent(destination)}`;
+              window.open(webUrl, '_blank');
+          }
+          return;
+      }
+
+      // Google Maps logic (Robust multi-point support)
       const waypoints = item.subItems
           .slice(0, item.subItems.length - 1)
           .map(sub => sub.endLocation)
           .filter(Boolean)
           .join('|');
       
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin || '')}&destination=${encodeURIComponent(destination || '')}&waypoints=${encodeURIComponent(waypoints)}&travelmode=walking`;
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${encodeURIComponent(waypoints)}&travelmode=walking`;
       window.open(url, '_blank');
   };
 
@@ -220,7 +263,7 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
                         className="w-full py-2 bg-white border border-stone-200 text-stone-700 rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-50 active:scale-95 transition-all"
                     >
                         <Navigation size={14} className={shouldUseNaver(sub) ? "text-[#03C75A]" : "text-blue-500"} />
-                        前往 {sub.endLocation}
+                        前往 {sub.endLocation || sub.title}
                     </button>
                 </div>
             ))}
@@ -302,10 +345,14 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
             {hasSubItems && (
                  <button 
                     onClick={openMultiStopRoute}
-                    className="w-full py-3 mt-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-pink-100 active:scale-95 transition-transform"
+                    className={`w-full py-3 mt-2 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform ${
+                        shouldUseNaver(item) 
+                            ? 'bg-[#03C75A] shadow-green-100' 
+                            : 'bg-gradient-to-r from-rose-500 to-pink-500 shadow-pink-100'
+                    }`}
                 >
                     <Route size={18} />
-                    開啟購物路線地圖 (全站點順序)
+                    {shouldUseNaver(item) ? '開啟路線 App (嘗試帶入中途點)' : '開啟購物路線地圖 (全站點順序)'}
                 </button>
             )}
 
