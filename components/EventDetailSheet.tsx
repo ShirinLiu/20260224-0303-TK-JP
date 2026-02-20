@@ -253,7 +253,10 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
 
                      {/* Image Preview (Small) */}
                     {sub.attachments && sub.attachments.length > 0 && (
-                        <div className="mb-3 rounded-lg overflow-hidden border border-stone-100 h-32">
+                        <div 
+                            className="mb-3 rounded-lg overflow-hidden border border-stone-100 h-32 cursor-pointer active:opacity-90 transition-opacity"
+                            onClick={() => setViewingImage(sub.attachments![0])}
+                        >
                              <img src={sub.attachments[0]} alt={sub.title} className="w-full h-full object-cover" />
                         </div>
                     )}
@@ -478,7 +481,11 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
 
                 <div className="space-y-4">
                     {item.attachments?.map((url, i) => (
-                        <div key={i} className="relative group rounded-2xl overflow-hidden shadow-sm border border-stone-100">
+                        <div 
+                            key={i} 
+                            className="relative group rounded-2xl overflow-hidden shadow-sm border border-stone-100 cursor-pointer"
+                            onClick={() => setViewingImage(url)}
+                        >
                             <img 
                                 src={url} 
                                 alt="Attachment" 
@@ -486,8 +493,11 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
                             <button 
-                                onClick={() => handleRemoveAttachment(i)}
-                                className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-red-500 transition-colors"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveAttachment(i);
+                                }}
+                                className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-red-500 transition-colors z-10"
                             >
                                 <Trash2 size={16} />
                             </button>
