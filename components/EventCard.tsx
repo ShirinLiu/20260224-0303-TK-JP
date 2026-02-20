@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ItineraryItem, EventType, Tag } from '../types';
-import { Plane, Train, MapPin, BedDouble, ShoppingBag, ChevronRight, Utensils, AlertTriangle, Receipt, ArrowRight } from 'lucide-react';
+import { Plane, Train, MapPin, BedDouble, ShoppingBag, ChevronRight, Utensils, AlertTriangle, Receipt, ArrowRight, Camera } from 'lucide-react';
 
 interface EventCardProps {
   item: ItineraryItem;
@@ -48,6 +48,7 @@ export const EventCard: React.FC<EventCardProps> = ({ item, onClick }) => {
         case EventType.TRAIN: return <Train size={16} className="text-emerald-600" />;
         case EventType.STAY: return <BedDouble size={16} className="text-indigo-600" />;
         case EventType.SHOPPING: return <ShoppingBag size={16} className="text-rose-600" />;
+        case EventType.PHOTO: return <Camera size={16} className="text-teal-600" />;
         default: return <MapPin size={16} className="text-stone-400" />;
     }
   };
@@ -61,6 +62,7 @@ export const EventCard: React.FC<EventCardProps> = ({ item, onClick }) => {
          case EventType.TRAIN: return 'border-l-emerald-400';
          case EventType.STAY: return 'border-l-indigo-400';
          case EventType.SHOPPING: return 'border-l-rose-300';
+         case EventType.PHOTO: return 'border-l-teal-400';
          default: return 'border-l-stone-300';
      }
   };

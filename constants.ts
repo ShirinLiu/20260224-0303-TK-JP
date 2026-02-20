@@ -31,17 +31,26 @@ const IMAGES = {
   ginza_donki: `${GITHUB_BASE}/ginza_donki.jpg`,
 };
 
+const SKI_INFO = {
+  name: '岩原滑雪場',
+  url: 'https://weathernews.jp/ski/spot/35453/',
+  snowDepth: '220', // Based on typical Feb data for Iwappara
+  status: '全面滑走可',
+  temperature: '-2°C'
+};
+
 export const INITIAL_ITINERARY: DailyPlan[] = [
   {
     date: "2/24 (二)",
+    skiResort: SKI_INFO,
     items: [
       {
         id: id(),
         date: "2/24 (二)",
         type: EventType.FLIGHT,
         title: "飛機 (酷航)",
-        startLocation: "桃園機場 (TPE)",
-        endLocation: "成田機場 (NRT)",
+        startLocation: "桃園 T1 (TPE)",
+        endLocation: "成田 T1 (NRT)",
         startTime: "14:00",
         endTime: "18:00",
         code: "TR874",
@@ -53,7 +62,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         date: "2/24 (二)",
         type: EventType.TRAIN,
         title: "成田特快 (N'EX)",
-        startLocation: "成田機場第一航廈",
+        startLocation: "成田機場 T1",
         endLocation: "東京車站",
         startTime: "19:49",
         endTime: "20:51",
@@ -115,6 +124,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
   },
   {
     date: "2/25 (三)",
+    skiResort: SKI_INFO,
     items: [
       {
         id: id(),
@@ -230,6 +240,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
   },
   {
     date: "2/26 (四)",
+    skiResort: SKI_INFO,
     items: [
       {
         id: id(),
@@ -872,34 +883,43 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
             startLocation: "Shibuya PARCO",
             endLocation: "FREAK'S STORE Shibuya",
             startTime: "19:05",
-            endTime: "19:35",
-            notes: "⏰ 營業時間: 12:00 - 20:00\n抵達澀谷車站前的最後一站。獨立旗艦店，品項豐富，美式復古與山系混搭氛圍強烈。",
-            tags: [{ label: "美式復古", type: "shopping" }, { label: "旗艦店", type: "info" }],
+            endTime: "19:25",
+            notes: "⚠️ 必須在 19:25 前離開，趕往東京車站拍照/晚餐。\n⏰ 營業時間: 12:00 - 20:00\n抵達澀谷車站前的最後一站。獨立旗艦店，品項豐富，美式復古與山系混搭氛圍強烈。",
+            tags: [{ label: "19:25前離開", type: "alert" }, { label: "旗艦店", type: "info" }],
             walkingRoute: "步行約 5 分鐘",
             navLink: "https://www.google.com/maps/search/?api=1&query=FREAKS+STORE+Shibuya",
             guideRecommendation: {
                 mustOrder: "Nautica 聯名款, 軍工裝外套",
                 tips: "這裡的選品風格比 LUMINE EST 店更硬派一點，男裝選擇很多。"
             }
-          }
+          },
         ]
       },
       {
         id: id(),
         date: "2/28 (六)",
-        type: EventType.ACTIVITY,
-        title: "晚餐: 牛たん荒 (Gyutan Ara)",
+        type: EventType.FOOD,
+        title: "牛舌 Negishi (八重洲地下街)",
         startLocation: "Shibuya",
-        endLocation: "Gyutan Ara Shinjuku",
+        endLocation: "Negishi Yaechika",
         startTime: "20:00",
         endTime: "21:30",
-        notes: "新宿西口人氣厚切牛舌居酒屋。口感脆彈，炭火香氣十足。",
-        tags: [{ label: "必吃牛舌", type: "food" }, { label: "Res: 20:00", type: "reservation" }],
-        walkingRoute: "從澀谷搭乘 JR 山手線至新宿站 (約 7 分鐘)，西口步行 5 分鐘",
-        navLink: "https://www.google.com/maps/search/?api=1&query=Gyutan+Ara+Shinjuku",
+        notes: "⚠️ 重要任務：需在東京車站拍攝旅遊補助照片！\n牛たんねぎし ヤエチカ店 (八重洲地下街)。\n請在 20:00 前抵達東京車站周邊，晚餐後記得拍照。",
+        tags: [{ label: "20:00前抵達", type: "alert" }, { label: "補助拍照", type: "info" }],
+        walkingRoute: "澀谷站(JR山手線) ➜ 東京站(八重洲口)",
+        navLink: "https://www.google.com/maps/search/?api=1&query=Negishi+Yaechika",
+        detailedWalkingGuide: {
+            steps: [
+                "從澀谷站搭乘 JR 山手線 (往品川/東京方面，內回) 至東京站 (約 25 分)。",
+                "抵達東京站後，尋找「八重洲地下中央口」指標。",
+                "出改札口後進入「八重洲地下街 (Yaechika)」。",
+                "Negishi 位於地下街內，請參考地下街地圖尋找橘色招牌的「ねぎし」。",
+                "吃完飯後，請在東京車站明顯地標處拍攝補助證明照片。"
+            ]
+        },
         guideRecommendation: {
-            mustOrder: "1. 牛たん定食 (牛舌定食)\n2. ゆでたん (燉煮牛舌)\n3. テールスープ (牛尾湯)",
-            tips: "這家是居酒屋風格，可以點單品配酒。燉煮牛舌非常軟嫩，建議嘗試！"
+            mustOrder: "1. 白舌套餐 (Shiro-tan Set)\n2. 燉牛舌 (Tanto)",
+            tips: "Negishi 的山藥泥拌飯是靈魂，敢吃的一定要淋在麥飯上。"
         }
       },
       {
@@ -907,140 +927,142 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         date: "2/28 (六)",
         type: EventType.STAY,
         title: "返回飯店",
-        startLocation: "大塚車站",
+        startLocation: "東京車站",
         endLocation: "OMO5 東京大塚",
+        startTime: "21:40",
+        endTime: "22:15",
         notes: "續住 OMO5 東京大塚",
-        walkingRoute: "JR大塚站「北口」過馬路即達 (步行1分)"
+        walkingRoute: "東京站 (JR山手線) ➜ 大塚站 (北口)"
       }
     ]
   },
+  {
+    date: "3/1 (日)",
+    items: [
       {
+        id: id(),
         date: "3/1 (日)",
-        items: [
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.TRANSFER,
-            title: "退房出發 (往機場)",
-            startLocation: "OMO5 東京大塚",
-            endLocation: "日暮里站 (Skyliner)",
-            startTime: "07:30",
-            endTime: "07:50",
-            mapType: 'google', // FORCE GOOGLE MAP
-            notes: "建議 07:30 退房。搭乘 JR 山手線至『日暮里』站轉車 (約 10 分)。",
-            tags: [{ label: "Check-out 07:30", type: "alert" }],
-            walkingRoute: "JR大塚站 ➜ 日暮里站"
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.TRANSFER,
-            title: "Skyliner (Keisei)",
-            startLocation: "日暮里站 (Nippori)",
-            endLocation: "成田機場 (NRT)",
-            startTime: "08:10",
-            endTime: "08:50",
-            mapType: 'google', // FORCE GOOGLE MAP
-            notes: "搭乘 Keisei Skyliner (往成田機場)。建議搭乘 08:00~08:20 之間的班次，確保 09:30 前抵達。",
-            tags: [{ label: "Skyliner", type: "info" }],
-            detailedWalkingGuide: {
-                steps: [
-                    "抵達 JR 日暮里站後，依照藍色「京成線 / Skyliner」指標。",
-                    "經過「JR・京成 轉乘改札口」。",
-                    "前往 1 號月台 (Skyliner 專用)。",
-                    "車程約 36-40 分鐘直達機場。"
-                ]
-            }
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.FLIGHT,
-            title: "飛機 (Air Premia)",
-            startLocation: "成田機場 (NRT)",
-            endLocation: "仁川機場 (ICN)",
-            startTime: "12:30",
-            endTime: "15:20",
-            mapType: 'google', // FORCE GOOGLE MAP
-            code: "YP732",
-            notes: "請於 09:30 左右抵達機場櫃檯報到。",
-            tags: [{ label: "起飛前3hr抵達", type: "alert" }],
-            attachments: [IMAGES.flight_nrt_icn]
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.STAY,
-            title: "飯店寄放行李",
-            startLocation: "忠武路站",
-            endLocation: "Wecostay Namsan",
-            startTime: "17:00",
-            endTime: "17:30",
-            navLink: "https://naver.me/G2EwQEal",
-            notes: "抵達飯店辦理入住或寄放行李。\n地址: 서울 중구 충무로 3 111호 (WeCostay Namsan)。",
-            tags: [{ label: "PIN: 9466", type: "reservation" }],
-            walkingRoute: "地鐵忠武路站「6號出口」步行約 3 分鐘",
-            attachments: [IMAGES.hotel_wecostay]
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.ACTIVITY,
-            title: "金豬食堂 (抽號碼牌)",
-            startLocation: "Wecostay Namsan",
-            endLocation: "Geumdaeji Shikdang",
-            startTime: "17:40",
-            endTime: "18:00",
-            navLink: "https://naver.me/FKGF8vbb",
-            notes: "放置行李後，立刻搭計程車或地鐵 (藥水站) 前往餐廳抽取號碼牌/登記候位。\n地址: 首爾特別市 中區 新堂洞 370-69",
-            tags: [{ label: "必先抽號碼", type: "alert" }],
-            walkingRoute: "計程車約 5-8 分鐘"
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.SHOPPING,
-            title: "東大門逛街 (等叫號)",
-            startLocation: "Geumdaeji",
-            endLocation: "Dongdaemun (Nyunyu)",
-            startTime: "18:00",
-            endTime: "20:00",
-            navLink: "https://map.naver.com/p/search/Nyunyu%20Dongdaemun",
-            notes: "等待叫號時的購物攻略：\n1. **Nyunyu (飾品批發)**: 就在 DDP 後面。整棟都是飾品，款式超多且便宜 (營業至凌晨 5 點)。\n2. **現代百貨 Outlet**: B1 書店/Cafe 休息，1F Nike/Adidas Factory Store 挖寶。\n3. **Doota Mall**: 1F Shake Shack, B1 Nike Custom (可客製化帽子/T恤), 4F No Brand 超市買零食。",
-            tags: [{ label: "車程約5分", type: "info" }, { label: "Nyunyu必逛", type: "shopping" }],
-            walkingRoute: "從藥水站搭計程車至東大門約 5-8 分鐘 ($5000-6000 KRW)"
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.ACTIVITY,
-            title: "晚餐: 金豬食堂 (Geumdaeji)",
-            startLocation: "Dongdaemun",
-            endLocation: "Geumdaeji Shikdang",
-            startTime: "20:00",
-            endTime: "21:30",
-            navLink: "https://naver.me/FKGF8vbb",
-            notes: "米其林必比登推薦，首爾三大烤肉之一。\n地址: 首爾特別市 中區 新堂洞 370-69",
-            tags: [{ label: "必吃烤肉", type: "food" }, { label: "排隊名店", type: "alert" }],
-            guideRecommendation: {
-              mustOrder: "1. 本五花肉 (Bon Samgyeopsal)\n2. 雪花豬頸肉 (Nunkkot Moksal)\n3. 泡菜豬肉鍋 (Kimchi Jjigae)",
-              tips: "如果過號會被取消，請隨時留意手機通知 (CatchTable)。肉質鮮美，店員會幫忙烤到完美狀態。泡菜鍋非常濃郁，必點！"
-            }
-          },
-          {
-            id: id(),
-            date: "3/1 (日)",
-            type: EventType.TRANSFER,
-            title: "返回飯店",
-            startLocation: "Geumdaeji Shikdang",
-            endLocation: "Wecostay Namsan",
-            startTime: "22:00",
-            navLink: "https://naver.me/G2EwQEal",
-            notes: "返回 Wecostay 休息。",
-            walkingRoute: "計程車約 5-10 分鐘，或地鐵藥水站 -> 忠武路站"
-          }
-        ]
+        type: EventType.TRANSFER,
+        title: "退房出發 (往機場)",
+        startLocation: "OMO5 東京大塚",
+        endLocation: "日暮里站 (Skyliner)",
+        startTime: "07:30",
+        endTime: "07:50",
+        mapType: 'google', // FORCE GOOGLE MAP
+        notes: "建議 07:30 退房。搭乘 JR 山手線至『日暮里』站轉車 (約 10 分)。",
+        tags: [{ label: "Check-out 07:30", type: "alert" }],
+        walkingRoute: "JR大塚站 ➜ 日暮里站"
       },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.TRANSFER,
+        title: "Skyliner (Keisei)",
+        startLocation: "日暮里站 (Nippori)",
+        endLocation: "成田機場 T2",
+        startTime: "08:10",
+        endTime: "08:50",
+        mapType: 'google', // FORCE GOOGLE MAP
+        notes: "搭乘 Keisei Skyliner (往成田機場)。建議搭乘 08:00~08:20 之間的班次，確保 09:30 前抵達。",
+        tags: [{ label: "Skyliner", type: "info" }],
+        detailedWalkingGuide: {
+            steps: [
+                "抵達 JR 日暮里站後，依照藍色「京成線 / Skyliner」指標。",
+                "經過「JR・京成 轉乘改札口」。",
+                "前往 1 號月台 (Skyliner 專用)。",
+                "車程約 36-40 分鐘直達機場。"
+            ]
+        }
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.FLIGHT,
+        title: "飛機 (Air Premia)",
+        startLocation: "成田機場 T2 (NRT)",
+        endLocation: "仁川機場 T1 (ICN)",
+        startTime: "12:30",
+        endTime: "15:20",
+        mapType: 'google', // FORCE GOOGLE MAP
+        code: "YP732",
+        notes: "請於 09:30 左右抵達機場櫃檯報到。Air Premia 位於第二航廈 (T2)。",
+        tags: [{ label: "起飛前3hr抵達", type: "alert" }],
+        attachments: [IMAGES.flight_nrt_icn]
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.STAY,
+        title: "飯店寄放行李",
+        startLocation: "忠武路站",
+        endLocation: "Wecostay Namsan",
+        startTime: "17:00",
+        endTime: "17:30",
+        navLink: "https://naver.me/G2EwQEal",
+        notes: "抵達飯店辦理入住或寄放行李。\n地址: 서울 중구 충무로 3 111호 (WeCostay Namsan)。",
+        tags: [{ label: "PIN: 9466", type: "reservation" }],
+        walkingRoute: "地鐵忠武路站「6號出口」步行約 3 分鐘",
+        attachments: [IMAGES.hotel_wecostay]
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.ACTIVITY,
+        title: "金豬食堂 (抽號碼牌)",
+        startLocation: "Wecostay Namsan",
+        endLocation: "Geumdaeji Shikdang",
+        startTime: "17:40",
+        endTime: "18:00",
+        navLink: "https://naver.me/FKGF8vbb",
+        notes: "放置行李後，立刻搭計程車或地鐵 (藥水站) 前往餐廳抽取號碼牌/登記候位。\n地址: 首爾特別市 中區 新堂洞 370-69",
+        tags: [{ label: "必先抽號碼", type: "alert" }],
+        walkingRoute: "計程車約 5-8 分鐘"
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.SHOPPING,
+        title: "東大門逛街 (等叫號)",
+        startLocation: "Geumdaeji",
+        endLocation: "Dongdaemun (Nyunyu)",
+        startTime: "18:00",
+        endTime: "20:00",
+        navLink: "https://map.naver.com/p/search/Nyunyu%20Dongdaemun",
+        notes: "等待叫號時的購物攻略：\n1. **Nyunyu (飾品批發)**: 就在 DDP 後面。整棟都是飾品，款式超多且便宜 (營業至凌晨 5 點)。\n2. **現代百貨 Outlet**: B1 書店/Cafe 休息，1F Nike/Adidas Factory Store 挖寶。\n3. **Doota Mall**: 1F Shake Shack, B1 Nike Custom (可客製化帽子/T恤), 4F No Brand 超市買零食。",
+        tags: [{ label: "車程約5分", type: "info" }, { label: "Nyunyu必逛", type: "shopping" }],
+        walkingRoute: "從藥水站搭計程車至東大門約 5-8 分鐘 ($5000-6000 KRW)"
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.ACTIVITY,
+        title: "晚餐: 金豬食堂 (Geumdaeji)",
+        startLocation: "Dongdaemun",
+        endLocation: "Geumdaeji Shikdang",
+        startTime: "20:00",
+        endTime: "21:30",
+        navLink: "https://naver.me/FKGF8vbb",
+        notes: "米其林必比登推薦，首爾三大烤肉之一。\n地址: 首爾特別市 中區 新堂洞 370-69",
+        tags: [{ label: "必吃烤肉", type: "food" }, { label: "排隊名店", type: "alert" }],
+        guideRecommendation: {
+          mustOrder: "1. 本五花肉 (Bon Samgyeopsal)\n2. 雪花豬頸肉 (Nunkkot Moksal)\n3. 泡菜豬肉鍋 (Kimchi Jjigae)",
+          tips: "如果過號會被取消，請隨時留意手機通知 (CatchTable)。肉質鮮美，店員會幫忙烤到完美狀態。泡菜鍋非常濃郁，必點！"
+        }
+      },
+      {
+        id: id(),
+        date: "3/1 (日)",
+        type: EventType.TRANSFER,
+        title: "返回飯店",
+        startLocation: "Geumdaeji Shikdang",
+        endLocation: "Wecostay Namsan",
+        startTime: "22:00",
+        navLink: "https://naver.me/G2EwQEal",
+        notes: "返回 Wecostay 休息。",
+        walkingRoute: "計程車約 5-10 分鐘，或地鐵藥水站 -> 忠武路站"
+      }
+    ]
+  },
   {
     date: "3/2 (一)",
     items: [
@@ -1315,7 +1337,7 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         type: EventType.TRANSFER,
         title: "前往仁川機場 (機場巴士 6009)",
         startLocation: "Egg Clinic (行李領取)",
-        endLocation: "仁川機場 (ICN)",
+        endLocation: "仁川機場 T1 (ICN)",
         startTime: "18:15",
         endTime: "20:00",
         navLink: "https://naver.me/FpMPzF7v",
@@ -1335,8 +1357,8 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         date: "3/3 (二)",
         type: EventType.FLIGHT,
         title: "飛機 (酷航)",
-        startLocation: "仁川機場 (ICN)",
-        endLocation: "桃園機場 (TPE)",
+        startLocation: "仁川機場 T1 (ICN)",
+        endLocation: "桃園 T1 (TPE)",
         startTime: "23:00",
         endTime: "00:45",
         code: "TR897",
@@ -1349,9 +1371,9 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
 ];
 
 export const FLIGHT_INFO = [
-  { no: 'TR874', route: 'TPE -> NRT', time: '2/24 14:00' },
-  { no: 'YP732', route: 'NRT -> ICN', time: '3/1 12:30' },
-  { no: 'TR897', route: 'ICN -> TPE', time: '3/3 23:00' }
+  { no: 'TR874', route: 'TPE (T1) -> NRT (T1)', time: '2/24 14:00' },
+  { no: 'YP732', route: 'NRT (T2) -> ICN (T1)', time: '3/1 12:30' },
+  { no: 'TR897', route: 'ICN (T1) -> TPE (T1)', time: '3/3 23:00' }
 ];
 
 export const ACCOMMODATION = [

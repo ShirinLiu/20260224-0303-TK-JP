@@ -3,15 +3,15 @@ import { EventCard } from './components/EventCard';
 import { EventDetailSheet } from './components/EventDetailSheet';
 import { ToolsView } from './components/ToolsView';
 import { INITIAL_ITINERARY, ACCOMMODATION } from './constants';
-import { DailyPlan, ItineraryItem } from './types';
+import { DailyPlan, ItineraryItem, SkiResortInfo } from './types';
 import { analyzeItinerary } from './services/geminiService';
-import { Map, Briefcase, Settings, CloudSun, Sparkles, ChevronLeft, ChevronRight, Moon, Sun, MapPin, Trash2, Route, ShieldCheck } from 'lucide-react';
+import { fetchRealTimeSkiData } from './services/skiService';
+import { Map, Briefcase, Settings, CloudSun, Sparkles, ChevronLeft, ChevronRight, MapPin, Trash2, Route, ShieldCheck, Snowflake, ExternalLink, RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState<'itinerary' | 'tools' | 'settings'>('itinerary');
   const [itinerary, setItinerary] = useState<DailyPlan[]>(() => {
     try {
-      // Updated to v2 to force load new initial data (Seongsu itinerary)
       const saved = localStorage.getItem('zen_travel_itinerary_v2');
       return saved ? JSON.parse(saved) : INITIAL_ITINERARY;
     } catch (e) {
@@ -24,6 +24,11 @@ export default function App() {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
+  
+  // Real-time Ski Data State
+  const [skiRealTimeData, setSkiRealTimeData] = useState<Partial<SkiResortInfo> | null>(null);
+  const [isLoadingSki, setIsLoadingSki] = useState(false);
+
   const daysScrollRef = useRef<HTMLDivElement>(null);
 
   const activeDay = itinerary[activeDayIndex];
@@ -36,6 +41,21 @@ export default function App() {
       alert("儲存空間已滿，部分圖片可能無法保存。請嘗試刪除一些舊圖片。");
     }
   }, [itinerary]);
+
+  // Fetch Ski Data Effect
+  useEffect(() => {
+    if (activeDay.skiResort) {
+        const fetchSki = async () => {
+            setIsLoadingSki(true);
+            const data = await fetchRealTimeSkiData(activeDay.skiResort!.url);
+            setSkiRealTimeData(data);
+            setIsLoadingSki(false);
+        };
+        fetchSki();
+    } else {
+        setSkiRealTimeData(null);
+    }
+  }, [activeDayIndex]); // Re-run when day changes
 
   const handleResetData = () => {
     if (window.confirm("確定要重置所有行程資料嗎？您的所有修改和上傳的照片將會消失。")) {
@@ -108,15 +128,12 @@ export default function App() {
     const day = newItinerary[activeDayIndex];
     day.items = day.items.map(i => i.id === updatedItem.id ? updatedItem : i);
     setItinerary(newItinerary);
-    // Update selected item state as well if it's currently open
     if (selectedItem?.id === updatedItem.id) {
         setSelectedItem(updatedItem);
     }
   };
 
-  // --- Map Helper: Open Day's Route ---
   const openDayRoute = () => {
-    // Collect all locations
     const points: string[] = [];
     if (morningHotel) points.push(morningHotel);
     activeDay.items.forEach(item => {
@@ -125,7 +142,6 @@ export default function App() {
     });
     if (nightHotel) points.push(nightHotel);
 
-    // Filter unique and valid
     const uniquePoints = Array.from(new Set(points.filter(p => p && p.trim() !== '')));
     
     if (uniquePoints.length < 2) {
@@ -230,6 +246,58 @@ export default function App() {
                       </div>
                    </div>
                    
+                   {/* Single Line Minimalist Ski Ticker */}
+                   {activeDay.skiResort && (
+                       <div className="mt-4 flex items-center justify-between bg-white/90 backdrop-blur-sm border border-sky-100 shadow-sm rounded-xl px-4 py-3">
+                           {/* Left: Name & Icon */}
+                           <div className="flex items-center gap-2 shrink-0">
+                               <a 
+                                   href={activeDay.skiResort.url} 
+                                   target="_blank" 
+                                   rel="noreferrer"
+                                   className="bg-sky-100 text-sky-600 p-1.5 rounded-full hover:bg-sky-200 transition-colors cursor-pointer active:scale-95"
+                               >
+                                    <Snowflake size={14} />
+                               </a>
+                               <span className="text-xs font-bold text-sumi">{activeDay.skiResort.name}</span>
+                           </div>
+
+                           {/* Right: Data Ticker */}
+                           <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                                {isLoadingSki ? (
+                                    <div className="flex items-center gap-1 text-xs text-stone-400">
+                                        <RefreshCw size={10} className="animate-spin" />
+                                        <span>更新中...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Status Dot & Text */}
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <span className={`w-2 h-2 rounded-full ${
+                                                (skiRealTimeData?.status || activeDay.skiResort.status)?.includes('不可') 
+                                                ? 'bg-rose-500' 
+                                                : 'bg-emerald-500 animate-pulse'
+                                            }`}></span>
+                                            {/* Always show status text on mobile, reduce size if needed */}
+                                            <span className="text-[10px] sm:text-xs font-bold text-stone-600">
+                                                {skiRealTimeData?.status || activeDay.skiResort.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="w-px h-3 bg-stone-200 shrink-0"></div>
+
+                                        {/* Snow Depth */}
+                                        <div className="text-xs sm:text-sm font-mono font-bold text-sky-600 shrink-0">
+                                            {skiRealTimeData?.snowDepth || activeDay.skiResort.snowDepth}
+                                            <span className="text-[10px] text-sky-400 ml-0.5">cm</span>
+                                        </div>
+                                    </>
+                                )}
+                           </div>
+                       </div>
+                   )}
+
                    {/* Insurance Button (Only for 2/24) */}
                    {activeDay.date.includes('2/24') && (
                       <a 

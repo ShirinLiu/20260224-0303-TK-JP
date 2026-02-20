@@ -6,12 +6,21 @@ export enum EventType {
   ACTIVITY = 'ACTIVITY',
   TRANSFER = 'TRANSFER',
   SHOPPING = 'SHOPPING',
-  FOOD = 'FOOD'
+  FOOD = 'FOOD',
+  PHOTO = 'PHOTO'
 }
 
 export interface Tag {
   label: string;
   type: 'food' | 'shopping' | 'reservation' | 'alert' | 'info';
+}
+
+export interface SkiResortInfo {
+  name: string;
+  url: string;
+  snowDepth?: string;   // e.g. "220"
+  status?: string;      // e.g. "全面滑走可"
+  temperature?: string; // e.g. "-2°C"
 }
 
 export interface ItineraryItem {
@@ -57,6 +66,7 @@ export interface DailyPlan {
   items: ItineraryItem[];
   weather?: string; // Populated by Gemini
   summary?: string;
+  skiResort?: SkiResortInfo; // New field for Ski Info
 }
 
 export interface Budget {

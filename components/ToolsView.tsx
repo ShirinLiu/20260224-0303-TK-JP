@@ -1,18 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { FLIGHT_INFO, ACCOMMODATION } from '../constants';
-import { Plane, Hotel, AlertCircle, Phone, CreditCard, RefreshCw, TrendingDown, Wallet, ExternalLink, ArrowRight, X, NotebookPen, CheckCircle2, User, Plus, Coins } from 'lucide-react';
+import { Plane, Hotel, AlertCircle, Phone, CreditCard, RefreshCw, TrendingDown, Wallet, ExternalLink, ArrowRight, X, NotebookPen, CheckCircle2, User, Plus, Percent, CheckSquare, Square, Luggage, Info } from 'lucide-react';
 
-// Manual update of approximate Visa rates (Simulated "Real-time")
-// Source reference: https://www.twrates.com/card/visa/jpy.html
-const RATES = {
-  JPY: 0.2185, // Approx recent Visa rate
-  KRW: 0.0238  // Approx recent Visa rate
+// Mock rates for demo purposes
+const PRESET_RATES = {
+  VISA: { JPY: 0.2185, KRW: 0.0238 },
+  MASTER: { JPY: 0.2190, KRW: 0.0239 },
+  JCB: { JPY: 0.2180, KRW: 0.0237 } // JCB usually has competitive JPY rates
 };
 
-const TRANS_FEE = 1.015; // 1.5% International transaction fee
+const PACKING_LIST = {
+  "重要證件 & 錢財": [
+    "護照 (檢查效期)",
+    "VJW / Q-Code 截圖",
+    "日幣 / 韓元現金",
+    "信用卡 (JCB/Visa)",
+    "Suica / T-Money 卡",
+    "網卡 / eSim (已設定)",
+    "原子筆 (填入境卡用)"
+  ],
+  "滑雪裝備 (自備)": [
+    "速乾排汗衣 (Base Layer)",
+    "滑雪長襪 (過小腿/厚底)",
+    "雪鏡 (Goggles)",
+    "護具 (護臀/護膝)",
+    "脖圍 / 面罩 (防風)",
+    "滑雪手套 (防水)",
+    "⚠️ 雪衣/褲/板/帽 (租借)"
+  ],
+  "冬季保暖穿搭 (0°C~5°C)": [
+    "極暖發熱衣 (Ultra Warm)",
+    "發熱褲 / 刷毛內搭褲",
+    "防風羽絨外套 / 大衣",
+    "圍巾 (必備)",
+    "毛帽 (遮耳款)",
+    "手套 (一般外出用)",
+    "羊毛襪 (厚底)",
+    "好走的靴子 / 球鞋"
+  ],
+  "電器 & 3C": [
+    "手機 & 充電線",
+    "行動電源 (建議2顆)",
+    "轉接頭 (韓國圓孔)",
+    "離子夾/電捲棒 (國際電壓)",
+    "Wifi 機 / 備用網卡"
+  ],
+  "保養 & 藥妝 (極乾對策)": [
+    "超保濕乳霜 (臉/身體)",
+    "護唇膏 (隨身)",
+    "護手霜",
+    "指緣油 (防倒刺)",
+    "保濕面膜",
+    "髮油 (防靜電)",
+    "個人彩妝品",
+    "卸妝/洗面乳"
+  ],
+  "隨身藥品 & 雜物": [
+    "感冒藥 (綜合)",
+    "止痛藥 (EVE)",
+    "腸胃藥",
+    "OK蹦 / 腳貼 (休足時間)",
+    "暖暖包 (貼式/手握)",
+    "環保購物袋 (日本不供袋)",
+    "大塑膠袋 (裝髒衣/垃圾)"
+  ]
+};
 
 export const ToolsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'fund' | 'accounting' | 'rate' | 'info'>('fund');
+  // Rename 'info' to 'checklist' in logic
+  const [activeTab, setActiveTab] = useState<'rate' | 'fund' | 'accounting' | 'checklist'>('rate');
+
+  // --- Rate State ---
+  const [amount, setAmount] = useState<string>('1000');
+  const [currencyMode, setCurrencyMode] = useState<'JPY' | 'KRW'>('JPY');
+  
+  // New Rate Settings
+  const [rateSource, setRateSource] = useState<'VISA' | 'MASTER' | 'JCB' | 'CUSTOM'>('VISA');
+  const [customRate, setCustomRate] = useState<string>('');
+  const [discountPercent, setDiscountPercent] = useState<string>('3'); // Default 3% rebate
+  const [feePercent, setFeePercent] = useState<string>('1.5'); // Default 1.5% fee
 
   // --- Fund State ---
   const INITIAL_FUND = 40000;
@@ -50,18 +115,15 @@ export const ToolsView: React.FC = () => {
   };
   
   const removeExpense = (id: number) => {
-      // Removed confirm dialog for smoother mobile experience
       setFundExpenses(prev => prev.filter(e => e.id !== id));
   }
 
-  // --- Accounting (External) State ---
-  // No longer using external URL, strictly local storage
+  // --- Accounting State ---
   const [accItem, setAccItem] = useState('');
   const [accCost, setAccCost] = useState('');
   const [payer, setPayer] = useState<'Ricky' | 'Serna'>('Ricky');
   const [accCurrency, setAccCurrency] = useState<'JPY' | 'KRW' | 'TWD'>('JPY');
   
-  // Storing simple text for history to maintain compatibility with existing structure
   const [accHistory, setAccHistory] = useState<{id: number, text: string, time: string}[]>(() => {
       try {
           const saved = localStorage.getItem('zen_travel_acc_v1');
@@ -77,41 +139,80 @@ export const ToolsView: React.FC = () => {
 
   const handleAccountingSubmit = () => {
       if (!accItem || !accCost) return;
-      
-      // Format: "Ricky 先付: 燒肉 5000 JPY"
       const textToSave = `${payer} 先付: ${accItem} ${accCost} ${accCurrency}`;
-      
-      // Save Local History
       const newEntry = {
           id: Date.now(),
           text: textToSave,
           time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute:'2-digit' })
       };
       setAccHistory(prev => [newEntry, ...prev]);
-
-      // Reset Inputs
       setAccItem('');
       setAccCost('');
   };
   
   const removeAccHistory = (id: number) => {
-      // Removed confirm dialog for smoother mobile experience
       setAccHistory(prev => prev.filter(e => e.id !== id));
   };
 
-  // --- Rate State ---
-  const [amount, setAmount] = useState<string>('1000');
-  const [currencyMode, setCurrencyMode] = useState<'JPY' | 'KRW'>('JPY');
+  // --- Checklist State ---
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('zen_travel_checklist_v1');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
-  const rawRate = currencyMode === 'JPY' ? RATES.JPY : RATES.KRW;
-  const rawTwd = Math.round(parseFloat(amount || '0') * rawRate);
-  const feeTwd = Math.round(parseFloat(amount || '0') * rawRate * TRANS_FEE);
+  useEffect(() => {
+    localStorage.setItem('zen_travel_checklist_v1', JSON.stringify(checkedItems));
+  }, [checkedItems]);
+
+  const toggleCheckItem = (item: string) => {
+    // If it's a rental reminder (starts with warning sign), don't toggle check
+    if (item.startsWith("⚠️")) return;
+
+    setCheckedItems(prev => ({
+      ...prev,
+      [item]: !prev[item]
+    }));
+  };
+
+  const getChecklistProgress = () => {
+      // Filter out rental reminders from progress calculation
+      const items = Object.values(PACKING_LIST).flat().filter(i => !i.startsWith("⚠️"));
+      const total = items.length;
+      const checked = Object.keys(checkedItems).filter(k => checkedItems[k] && items.includes(k)).length;
+      return { total, checked, percent: Math.round((checked / total) * 100) };
+  };
+
+  // --- Rate Calculation Logic ---
+  const currentRate = rateSource === 'CUSTOM' 
+    ? (parseFloat(customRate) || 0) 
+    : PRESET_RATES[rateSource][currencyMode];
+
+  const rawAmountTwd = Math.round(parseFloat(amount || '0') * currentRate);
+  
+  // Calculate Fee (based on raw amount converted)
+  const feeAmountTwd = Math.round(rawAmountTwd * (parseFloat(feePercent || '0') / 100));
+  
+  // Calculate Rebate (based on raw amount converted)
+  const rebateAmountTwd = Math.round(rawAmountTwd * (parseFloat(discountPercent || '0') / 100));
+
+  // Net Rebate (Rebate - Fee)
+  const netRebateTwd = rebateAmountTwd - feeAmountTwd;
 
   return (
     <div className="pb-24 pt-4 px-4 max-w-md mx-auto">
       
       {/* Tab Switcher */}
       <div className="flex bg-stone-200 p-1 rounded-xl mb-6 shadow-inner">
+        <button 
+          onClick={() => setActiveTab('rate')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'rate' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+        >
+          匯率
+        </button>
         <button 
           onClick={() => setActiveTab('fund')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'fund' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
@@ -125,18 +226,165 @@ export const ToolsView: React.FC = () => {
           記帳
         </button>
         <button 
-          onClick={() => setActiveTab('rate')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'rate' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
+          onClick={() => setActiveTab('checklist')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'checklist' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
         >
-          匯率
-        </button>
-        <button 
-          onClick={() => setActiveTab('info')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'info' ? 'bg-white shadow-sm text-sumi' : 'text-stone-500 hover:text-stone-700'}`}
-        >
-          資訊
+          必帶
         </button>
       </div>
+
+      {activeTab === 'rate' && (
+        <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-sumi flex items-center gap-2">
+                        <RefreshCw size={20} className="text-indigo-600" /> 
+                        刷卡匯率試算
+                    </h3>
+                    <div className="text-[10px] text-stone-400 bg-stone-50 px-2 py-1 rounded-full font-mono">
+                       {rateSource === 'CUSTOM' ? '自訂匯率' : `1 ${currencyMode} ≈ ${currentRate} TWD`}
+                    </div>
+                </div>
+
+                {/* Currency Toggle */}
+                <div className="flex bg-stone-100 p-1.5 rounded-xl mb-4">
+                    <button 
+                        onClick={() => setCurrencyMode('JPY')}
+                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'JPY' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
+                    >
+                        <span>🇯🇵 JPY</span>
+                        <ArrowRight size={12} className="opacity-50" />
+                        <span>🇹🇼 TWD</span>
+                    </button>
+                    <button 
+                        onClick={() => setCurrencyMode('KRW')}
+                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'KRW' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
+                    >
+                        <span>🇰🇷 KRW</span>
+                        <ArrowRight size={12} className="opacity-50" />
+                        <span>🇹🇼 TWD</span>
+                    </button>
+                </div>
+
+                {/* Amount Input */}
+                <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 mb-6 focus-within:ring-2 focus-within:ring-indigo-100 transition-all relative">
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1 block">
+                        消費金額 ({currencyMode})
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-stone-300">{currencyMode === 'JPY' ? '¥' : '₩'}</span>
+                        <input 
+                            type="number"
+                            inputMode="decimal"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="w-full bg-transparent border-none text-3xl font-mono font-bold text-sumi focus:outline-none p-0"
+                            placeholder="1000"
+                        />
+                    </div>
+                </div>
+
+                {/* Settings Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                    {/* Source Selector */}
+                    <div className="col-span-2 bg-stone-50 rounded-xl p-2 flex gap-1">
+                         {(['VISA', 'MASTER', 'JCB', 'CUSTOM'] as const).map(src => (
+                             <button
+                                key={src}
+                                onClick={() => setRateSource(src)}
+                                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${rateSource === src ? 'bg-white shadow-sm text-sumi' : 'text-stone-400'}`}
+                             >
+                                 {src}
+                             </button>
+                         ))}
+                    </div>
+
+                    {/* Custom Rate Input (Conditional) */}
+                    {rateSource === 'CUSTOM' && (
+                        <div className="col-span-2 bg-stone-50 rounded-xl px-3 py-2 flex items-center gap-2 border border-stone-200">
+                             <span className="text-[10px] text-stone-500 whitespace-nowrap">自訂匯率:</span>
+                             <input 
+                                type="number" 
+                                inputMode="decimal"
+                                value={customRate}
+                                onChange={(e) => setCustomRate(e.target.value)}
+                                className="w-full bg-transparent text-sm font-bold text-sumi focus:outline-none"
+                                placeholder="0.218"
+                             />
+                        </div>
+                    )}
+
+                    {/* Discount Input */}
+                    <div className="bg-stone-50 rounded-xl px-3 py-2 border border-stone-100 flex items-center gap-2">
+                         <div className="flex flex-col">
+                             <span className="text-[9px] text-stone-400 font-bold uppercase">回饋 %</span>
+                             <div className="flex items-center">
+                                <input 
+                                    type="number" 
+                                    inputMode="decimal"
+                                    value={discountPercent}
+                                    onChange={(e) => setDiscountPercent(e.target.value)}
+                                    className="w-10 bg-transparent text-sm font-bold text-emerald-600 focus:outline-none"
+                                />
+                                <Percent size={10} className="text-stone-400" />
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* Fee Input */}
+                    <div className="bg-stone-50 rounded-xl px-3 py-2 border border-stone-100 flex items-center gap-2">
+                         <div className="flex flex-col">
+                             <span className="text-[9px] text-stone-400 font-bold uppercase">手續費 %</span>
+                             <div className="flex items-center">
+                                <input 
+                                    type="number" 
+                                    inputMode="decimal"
+                                    value={feePercent}
+                                    onChange={(e) => setFeePercent(e.target.value)}
+                                    className="w-10 bg-transparent text-sm font-bold text-rose-600 focus:outline-none"
+                                />
+                                <Percent size={10} className="text-stone-400" />
+                             </div>
+                         </div>
+                    </div>
+                </div>
+
+                {/* Results Area */}
+                <div className="space-y-3">
+                     {/* Row 1: Original Amount (Smaller Compact Row) */}
+                     <div className="bg-stone-800 text-white rounded-xl py-3 px-5 flex items-center justify-between shadow-sm">
+                         <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">原始金額 (TWD)</span>
+                         <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-mono font-bold tracking-tight">{rawAmountTwd.toLocaleString()}</span>
+                         </div>
+                     </div>
+
+                     {/* Row 2: Grid for Breakdown */}
+                     <div className="grid grid-cols-3 gap-2">
+                         {/* Column 1: Rebate Amount (Green +) */}
+                         <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-2 flex flex-col items-center justify-center text-center">
+                             <span className="text-[9px] font-bold text-emerald-600/70 uppercase mb-0.5">信用卡回饋</span>
+                             <span className="text-sm font-mono font-bold text-emerald-600 leading-none">+{rebateAmountTwd.toLocaleString()}</span>
+                         </div>
+
+                         {/* Column 2: Fee Amount (Red -) */}
+                         <div className="bg-rose-50 border border-rose-100 rounded-xl p-2 flex flex-col items-center justify-center text-center">
+                             <span className="text-[9px] font-bold text-rose-600/70 uppercase mb-0.5">國外手續費</span>
+                             <span className="text-sm font-mono font-bold text-rose-600 leading-none">-{feeAmountTwd.toLocaleString()}</span>
+                         </div>
+
+                         {/* Column 3: Net Rebate (Total) */}
+                         <div className={`border rounded-xl p-2 flex flex-col items-center justify-center text-center ${netRebateTwd >= 0 ? 'bg-indigo-50 border-indigo-100' : 'bg-stone-50 border-stone-200'}`}>
+                             <span className={`text-[9px] font-bold uppercase mb-0.5 ${netRebateTwd >= 0 ? 'text-indigo-600/70' : 'text-stone-400'}`}>總回饋</span>
+                             <span className={`text-sm font-mono font-bold leading-none ${netRebateTwd >= 0 ? 'text-indigo-600' : 'text-stone-500'}`}>
+                                 {netRebateTwd > 0 ? '+' : ''}{netRebateTwd.toLocaleString()}
+                             </span>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+      )}
 
       {activeTab === 'fund' && (
         <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
@@ -180,6 +428,7 @@ export const ToolsView: React.FC = () => {
                    <span className="absolute left-3 top-3 text-stone-400 text-sm font-bold">¥</span>
                    <input 
                      type="number" 
+                     inputMode="decimal"
                      placeholder="0" 
                      value={newCost}
                      onChange={(e) => setNewCost(e.target.value)}
@@ -315,6 +564,7 @@ export const ToolsView: React.FC = () => {
                <div className="relative flex-1">
                    <input 
                      type="number" 
+                     inputMode="decimal"
                      placeholder="金額" 
                      value={accCost}
                      onChange={(e) => setAccCost(e.target.value)}
@@ -376,180 +626,72 @@ export const ToolsView: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'rate' && (
+      {activeTab === 'checklist' && (
         <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-sumi flex items-center gap-2">
-                        <RefreshCw size={20} className="text-indigo-600" /> 
-                        Visa 匯率試算
-                    </h3>
-                    <a 
-                        href="https://www.twrates.com/card/visa/jpy.html" 
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[10px] flex items-center gap-1 text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full hover:bg-indigo-100 transition-colors"
-                    >
-                        查看來源 <ExternalLink size={10} />
-                    </a>
-                </div>
-
-                {/* Toggle */}
-                <div className="flex bg-stone-100 p-1.5 rounded-xl mb-6">
-                    <button 
-                        onClick={() => setCurrencyMode('JPY')}
-                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'JPY' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
-                    >
-                        <span>🇯🇵 JPY</span>
-                        <ArrowRight size={12} className="opacity-50" />
-                        <span>🇹🇼 TWD</span>
-                    </button>
-                    <button 
-                        onClick={() => setCurrencyMode('KRW')}
-                        className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currencyMode === 'KRW' ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400'}`}
-                    >
-                        <span>🇰🇷 KRW</span>
-                        <ArrowRight size={12} className="opacity-50" />
-                        <span>🇹🇼 TWD</span>
-                    </button>
-                </div>
-
-                {/* Input Area */}
-                <div className="space-y-4 relative">
-                    {/* Input */}
-                    <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1 block">
-                            {currencyMode === 'JPY' ? '日幣金額' : '韓幣金額'}
-                        </label>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-stone-300">{currencyMode === 'JPY' ? '¥' : '₩'}</span>
-                            <input 
-                                type="number" 
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full bg-transparent border-none text-3xl font-mono font-bold text-sumi focus:outline-none p-0"
-                                placeholder="1000"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="absolute left-1/2 -translate-x-1/2 top-[42%] z-10 bg-white rounded-full p-1.5 shadow-sm border border-stone-100">
-                        <TrendingDown size={16} className="text-stone-300" />
-                    </div>
-
-                    {/* Output Cards */}
-                    <div className="grid gap-3">
-                        {/* With Fee (Primary) */}
-                        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl p-4 shadow-sm">
-                            <div className="flex justify-between items-start mb-1">
-                                <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                                    <CreditCard size={10} />
-                                    含 1.5% 手續費
-                                </label>
-                                <span className="text-[10px] bg-white text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100">推薦參考</span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-sm font-bold text-indigo-300">$</span>
-                                <span className="text-3xl font-mono font-bold text-indigo-700">{feeTwd.toLocaleString()}</span>
-                                <span className="text-sm font-bold text-indigo-300">TWD</span>
-                            </div>
-                        </div>
-
-                        {/* Raw Rate (Secondary) */}
-                        <div className="bg-stone-50 border border-stone-100 rounded-2xl p-4">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1 block">
-                                Visa 原始匯率 (未稅)
-                            </label>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-sm font-bold text-stone-300">$</span>
-                                <span className="text-xl font-mono font-bold text-stone-600">{rawTwd.toLocaleString()}</span>
-                                <span className="text-sm font-bold text-stone-300">TWD</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Rate Info Footer */}
-                <div className="mt-6 text-center">
-                    <p className="text-[10px] text-stone-400">
-                        當前 Visa 參考匯率: 1 {currencyMode} ≈ {rawRate} TWD
-                    </p>
-                    <p className="text-[9px] text-stone-300 mt-1">
-                        實際扣款金額以銀行帳單為準
-                    </p>
-                </div>
-            </div>
-        </div>
-      )}
-
-      {activeTab === 'info' && (
-        <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
-          {/* Flights */}
-          <section>
-            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
-              <Plane size={14} /> 航班資訊
-            </h3>
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50 border border-stone-100">
-              {FLIGHT_INFO.map((f, i) => (
-                <div key={i} className="p-4 flex justify-between items-center hover:bg-stone-50 transition-colors">
+           
+           {/* Progress Card */}
+           <div className="bg-stone-800 text-white p-5 rounded-2xl shadow-md relative overflow-hidden">
+               <div className="relative z-10 flex justify-between items-end mb-3">
                   <div>
-                    <div className="font-bold text-sumi text-sm">{f.route}</div>
-                    <div className="text-xs text-stone-500 mt-0.5">{f.time}</div>
+                      <h3 className="text-lg font-bold flex items-center gap-2">
+                        <Luggage size={20} className="text-stone-300" />
+                        必帶清單
+                      </h3>
+                      <p className="text-xs text-stone-400 mt-1">
+                        JP & KR 冬日旅・行前準備
+                      </p>
                   </div>
-                  <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded-md text-xs font-mono font-bold">{f.no}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Accommodation */}
-          <section>
-            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
-              <Hotel size={14} /> 住宿資訊
-            </h3>
-            <div className="space-y-3">
-              {ACCOMMODATION.map((h, i) => (
-                <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-sumi text-sm">{h.name}</h4>
-                    <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-bold">{h.dates}</span>
+                  <div className="text-right">
+                      <span className="text-3xl font-mono font-bold">{getChecklistProgress().percent}%</span>
                   </div>
-                  <p className="text-xs text-stone-500 flex items-start gap-1.5">
-                     <span className="min-w-fit mt-0.5 opacity-50"><Hotel size={12}/></span> 
-                     {h.address}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+               </div>
+               
+               {/* Progress Bar */}
+               <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                     style={{ width: `${getChecklistProgress().percent}%` }}
+                   ></div>
+               </div>
+               <div className="flex justify-between mt-2 text-[10px] text-stone-400 font-mono">
+                   <span>{getChecklistProgress().checked} COMPLETED</span>
+                   <span>TOTAL {getChecklistProgress().total}</span>
+               </div>
+               
+               <CheckCircle2 className="absolute -right-4 -bottom-4 w-28 h-28 text-white opacity-5 rotate-[-15deg]" />
+           </div>
 
-          {/* Emergency */}
-          <section>
-             <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2 pl-2">
-              <AlertCircle size={14} /> 緊急聯絡
-            </h3>
-            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 space-y-4">
-               <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-                    <Phone size={18} />
+           {/* Checklist Categories */}
+           <div className="space-y-6">
+              {Object.entries(PACKING_LIST).map(([category, items]) => (
+                 <div key={category}>
+                    <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 pl-2">
+                        {category}
+                    </h4>
+                    <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden shadow-sm divide-y divide-stone-50">
+                        {items.map((item) => (
+                           <div 
+                             key={item}
+                             onClick={() => toggleCheckItem(item)}
+                             className={`p-4 flex items-center gap-3 active:bg-stone-50 transition-colors group select-none ${item.startsWith("⚠️") ? 'cursor-default' : 'cursor-pointer'}`}
+                           >
+                             <div className={`transition-all duration-300 ${item.startsWith("⚠️") ? 'opacity-30' : checkedItems[item] ? 'text-emerald-500 scale-110' : 'text-stone-300 group-hover:text-stone-400'}`}>
+                                {item.startsWith("⚠️") 
+                                    ? <Info size={22} className="text-orange-400" /> 
+                                    : checkedItems[item] 
+                                        ? <CheckSquare size={22} fill="currentColor" className="text-white bg-emerald-500 rounded-md" /> 
+                                        : <Square size={22} />
+                                }
+                             </div>
+                             <span className={`text-sm font-bold flex-1 transition-all ${item.startsWith("⚠️") ? 'text-orange-800' : checkedItems[item] ? 'text-stone-300 line-through decoration-stone-300 decoration-2' : 'text-sumi'}`}>
+                                {item}
+                             </span>
+                           </div>
+                        ))}
+                    </div>
                  </div>
-                 <div>
-                   <div className="text-sm font-bold text-rose-800">日本 JP</div>
-                   <div className="text-xs text-rose-600/80 mt-0.5">救護車/火警 119 &bull; 警察局 110</div>
-                 </div>
-               </div>
-               <div className="w-full h-px bg-rose-200/50"></div>
-               <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-                    <Phone size={18} />
-                 </div>
-                 <div>
-                   <div className="text-sm font-bold text-rose-800">韓國 KR</div>
-                   <div className="text-xs text-rose-600/80 mt-0.5">緊急專線 119 &bull; 旅遊諮詢 1330</div>
-                 </div>
-               </div>
-            </div>
-          </section>
+              ))}
+           </div>
         </div>
       )}
     </div>
