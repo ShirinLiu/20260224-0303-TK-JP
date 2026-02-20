@@ -58,6 +58,7 @@ const TagBadge: React.FC<{ tag: Tag }> = ({ tag }) => {
 
 export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClose, onUpdate }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -344,13 +345,13 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
                     {item.date.includes('2/24') && item.type === EventType.FLIGHT && (
                         <div className="grid grid-cols-2 gap-3 mt-3">
                             <button 
-                                onClick={() => window.open('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Ricky.JPG', '_blank')}
+                                onClick={() => setViewingImage('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Ricky.JPG')}
                                 className="py-3 bg-stone-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-700 active:scale-95 transition-transform text-sm"
                             >
                                 <QrCode size={16} /> VJW Ricky
                             </button>
                             <button 
-                                onClick={() => window.open('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Serna.JPG', '_blank')}
+                                onClick={() => setViewingImage('https://raw.githubusercontent.com/ShirinLiu/20260224-0303-Tokyo-Korea/main/20260224-0303-japan-%26-korea/assets/VJW_Serna.JPG')}
                                 className="py-3 bg-stone-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-stone-700 active:scale-95 transition-transform text-sm"
                             >
                                 <QrCode size={16} /> VJW Serna
@@ -510,6 +511,29 @@ export const EventDetailSheet: React.FC<EventDetailSheetProps> = ({ item, onClos
             <div className="h-6"></div> {/* Bottom Padding */}
         </div>
       </div>
+      
+      {/* Full Screen Image Modal */}
+      {viewingImage && (
+        <div 
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-2 animate-in fade-in duration-200"
+            onClick={() => setViewingImage(null)}
+        >
+            <button 
+                className="absolute top-6 right-6 text-white bg-white/20 p-2 rounded-full backdrop-blur-md hover:bg-white/30 transition-colors"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setViewingImage(null);
+                }}
+            >
+                <X size={24} />
+            </button>
+            <img 
+                src={viewingImage} 
+                alt="Full screen view" 
+                className="max-w-full max-h-full object-contain rounded-lg"
+            />
+        </div>
+      )}
     </>
   );
 }
