@@ -435,13 +435,31 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         id: id(),
         date: "2/27 (五)",
         type: EventType.TRANSFER,
-        title: "前往御徒町",
+        title: "前往妙義神社",
         startLocation: "OMO5 東京大塚",
-        endLocation: "御徒町 (Egg Baby Cafe)",
-        startTime: "09:00",
-        endTime: "09:30",
-        walkingRoute: "JR大塚站 ➜ JR御徒町站 (南口)"
+        endLocation: "妙義神社 (駒込)",
+        startTime: "08:00",
+        endTime: "08:15",
+        walkingRoute: "JR大塚站 ➜ JR駒込站 (北口) 步行5分"
       },
+      {
+        id: id(),
+        date: "2/27 (五)",
+        type: EventType.ACTIVITY,
+        title: "妙義神社 (貓咪御守)",
+        startLocation: "駒込",
+        endLocation: "Myogi Shrine",
+        startTime: "08:15",
+        endTime: "08:45",
+        notes: "勝負之神與貓奴聖地。這裡有非常可愛的「貓咪御守」！",
+        tags: [{ label: "貓咪御守", type: "shopping" }, { label: "勝負運", type: "info" }],
+        walkingRoute: "JR駒込站北口步行約 5 分鐘",
+        guideRecommendation: {
+            mustOrder: "貓咪御守 (黑貓/白貓), 勝守",
+            tips: "貓咪御守非常搶手，有時候會缺貨。境內階梯較陡，請注意腳步。"
+        }
+      },
+
       {
         id: id(),
         date: "2/27 (五)",
@@ -449,8 +467,8 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         title: "Egg Baby Cafe",
         startLocation: "御徒町",
         endLocation: "Egg Baby Cafe",
-        startTime: "09:30",
-        endTime: "10:15",
+        startTime: "09:15",
+        endTime: "10:00",
         notes: "超人氣排隊名店。建議速戰速決，以免耽誤後面行程。",
         tags: [{ label: "必吃早餐", type: "food" }, { label: "排隊店", type: "alert" }],
         walkingRoute: "JR御徒町站南口步行3分 (高架橋下)",
@@ -466,8 +484,8 @@ export const INITIAL_ITINERARY: DailyPlan[] = [
         title: "根津神社",
         startLocation: "Egg Baby Cafe",
         endLocation: "Nezu Shrine",
-        startTime: "10:30",
-        endTime: "11:30",
+        startTime: "10:15",
+        endTime: "11:15",
         notes: "東京十社之一。為了趕上壽司預約，請於 11:30 準時離開。",
         tags: [{ label: "11:30前離開", type: "alert" }, { label: "強運御守", type: "shopping" }, { label: "千本鳥居", type: "info" }],
         walkingRoute: "建議搭計程車前往(約10分) 或 步行20分",

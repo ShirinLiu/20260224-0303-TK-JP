@@ -5,15 +5,15 @@ import { EventDetailSheet } from './components/EventDetailSheet';
 import { ToolsView } from './components/ToolsView';
 import { INITIAL_ITINERARY, ACCOMMODATION } from './constants';
 import { DailyPlan, ItineraryItem, SkiResortInfo } from './types';
-import { analyzeItinerary } from './services/geminiService';
 import { fetchRealTimeSkiData } from './services/skiService';
-import { Map, Briefcase, Settings, CloudSun, Sparkles, ChevronLeft, ChevronRight, MapPin, Trash2, Route, ShieldCheck, Snowflake, ExternalLink, RefreshCw } from 'lucide-react';
+import { fetchWeather } from './services/weatherService';
+import { Map, Briefcase, Settings, CloudSun, ChevronLeft, ChevronRight, MapPin, Trash2, Route, ShieldCheck, Snowflake, RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState<'itinerary' | 'tools' | 'settings'>('itinerary');
   const [itinerary, setItinerary] = useState<DailyPlan[]>(() => {
     try {
-      const saved = localStorage.getItem('zen_travel_itinerary_v2');
+      const saved = localStorage.getItem('zen_travel_itinerary_v8');
       return saved ? JSON.parse(saved) : INITIAL_ITINERARY;
     } catch (e) {
       console.error("Failed to load itinerary from storage", e);
@@ -21,14 +21,13 @@ export default function App() {
     }
   });
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   
-  // Real-time Ski Data State
+  // Real-time Data State
   const [skiRealTimeData, setSkiRealTimeData] = useState<Partial<SkiResortInfo> | null>(null);
   const [isLoadingSki, setIsLoadingSki] = useState(false);
+  const [weatherData, setWeatherData] = useState<{ temp: string; desc: string } | null>(null);
 
   const daysScrollRef = useRef<HTMLDivElement>(null);
 
@@ -36,15 +35,29 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('zen_travel_itinerary_v2', JSON.stringify(itinerary));
+      localStorage.setItem('zen_travel_itinerary_v8', JSON.stringify(itinerary));
     } catch (e) {
       console.error("Storage quota exceeded", e);
       alert("儲存空間已滿，部分圖片可能無法保存。請嘗試刪除一些舊圖片。");
     }
   }, [itinerary]);
 
-  // Fetch Ski Data Effect
+  const getDayLocation = (day: DailyPlan) => {
+    const text = JSON.stringify(day.items);
+    if (text.includes('聖水') || text.includes('Seongsu')) return 'Seoul / Seongsu';
+    if (text.includes('首爾') || text.includes('仁川') || text.includes('ICN')) return 'Seoul / Incheon';
+    if (text.includes('越後湯澤') || text.includes('滑雪')) return 'Niigata (Snow)';
+    if (text.includes('高崎') || text.includes('Gunma')) return 'Gunma';
+    if (text.includes('成田') && !text.includes('東京')) return 'Narita';
+    if (text.includes('東京') || text.includes('大塚') || text.includes('上野') || text.includes('銀座') || text.includes('新宿')) return 'Tokyo';
+    return 'Japan'; 
+  };
+
+  const currentLocation = getDayLocation(activeDay);
+
+  // Fetch Ski Data & Weather Effect
   useEffect(() => {
+    // 1. Fetch Ski Data
     if (activeDay.skiResort) {
         const fetchSki = async () => {
             setIsLoadingSki(true);
@@ -56,11 +69,25 @@ export default function App() {
     } else {
         setSkiRealTimeData(null);
     }
-  }, [activeDayIndex]); // Re-run when day changes
+
+    // 2. Fetch Weather Data
+    const getWeather = async () => {
+        setWeatherData(null);
+        const data = await fetchWeather(currentLocation);
+        if (data) {
+            setWeatherData({
+                temp: `${Math.round(data.temperature)}°C`,
+                desc: data.weatherDescription
+            });
+        }
+    };
+    getWeather();
+
+  }, [activeDayIndex, currentLocation]); // Re-run when day or location changes
 
   const handleResetData = () => {
     if (window.confirm("確定要重置所有行程資料嗎？您的所有修改和上傳的照片將會消失。")) {
-      localStorage.removeItem('zen_travel_itinerary_v2');
+      localStorage.removeItem('zen_travel_itinerary_v8');
       setItinerary(INITIAL_ITINERARY);
       alert("資料已重置為預設值。");
     }
@@ -94,19 +121,6 @@ export default function App() {
 
   const { morningHotel, nightHotel } = getDailyAccommodation(activeDay.date);
 
-  const getDayLocation = (day: DailyPlan) => {
-    const text = JSON.stringify(day.items);
-    if (text.includes('聖水') || text.includes('Seongsu')) return 'Seoul / Seongsu';
-    if (text.includes('首爾') || text.includes('仁川') || text.includes('ICN')) return 'Seoul / Incheon';
-    if (text.includes('越後湯澤') || text.includes('滑雪')) return 'Niigata (Snow)';
-    if (text.includes('高崎') || text.includes('Gunma')) return 'Gunma';
-    if (text.includes('成田') && !text.includes('東京')) return 'Narita';
-    if (text.includes('東京') || text.includes('大塚') || text.includes('上野') || text.includes('銀座') || text.includes('新宿')) return 'Tokyo';
-    return 'Japan'; 
-  };
-
-  const currentLocation = getDayLocation(activeDay);
-
   useEffect(() => {
     if (daysScrollRef.current) {
       const activeTab = daysScrollRef.current.children[activeDayIndex] as HTMLElement;
@@ -115,14 +129,6 @@ export default function App() {
       }
     }
   }, [activeDayIndex]);
-
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true);
-    const newItinerary = await analyzeItinerary(itinerary);
-    setItinerary(newItinerary);
-    setIsAnalyzing(false);
-    setHasAnalyzed(true);
-  };
 
   const handleItemUpdate = (updatedItem: ItineraryItem) => {
     const newItinerary = [...itinerary];
@@ -193,19 +199,6 @@ export default function App() {
             <span className="text-sm font-bold text-sumi tracking-tight">0224-0303</span>
             <span className="text-[10px] bg-sumi text-white px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">JP & KR</span>
           </div>
-          
-          {view === 'itinerary' && (
-            <button 
-              onClick={handleAnalyze}
-              disabled={isAnalyzing || hasAnalyzed}
-              className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-all ${
-                hasAnalyzed ? 'bg-indigo-100 text-indigo-700' : 'bg-sumi text-white shadow-md active:scale-95'
-              } ${isAnalyzing ? 'opacity-70 cursor-wait' : ''}`}
-            >
-              <Sparkles size={12} />
-              {isAnalyzing ? '分析中...' : hasAnalyzed ? 'AI 導遊已啟用' : 'AI 導遊'}
-            </button>
-          )}
         </div>
 
         {view === 'itinerary' && (
@@ -250,17 +243,17 @@ export default function App() {
                         <h2 className="text-2xl font-bold text-sumi">{activeDay.date}</h2>
                       </div>
                       <div className="flex flex-col items-end">
-                         {activeDay.weather ? (
+                         {weatherData ? (
                            <>
                              <div className="flex items-center gap-2 text-indigo-900">
                                <CloudSun size={24} className="text-amber-500" />
-                               <span className="text-xl font-bold">{activeDay.weather.split(' ')[1] || '5°C'}</span>
+                               <span className="text-xl font-bold">{weatherData.temp}</span>
                              </div>
-                             <span className="text-xs text-stone-500 font-medium">{activeDay.weather.split(' ')[0] || 'Clear'}</span>
+                             <span className="text-xs text-stone-500 font-medium">{weatherData.desc}</span>
                            </>
                          ) : (
                            <div className="text-xs text-stone-400 bg-white/50 px-2 py-1 rounded">
-                               {hasAnalyzed ? '無天氣資料' : '等待 AI 分析...'}
+                               載入天氣中...
                            </div>
                          )}
                       </div>
